@@ -1,0 +1,12 @@
+[
+    {
+        "questions": "Trigger that check primary contact on particular account, also checks one Account can hold upto one primary contact",
+        "answer": "Check contact Trigger",
+        "no": 1
+    },
+    {
+        "questions": "Link a case to contact based on supplied Email, If supplied email match an existing Contact's email the case should link with that contact else create new contact and link that case with it",
+        "answers": "Check case Trigger",
+        "no": 2
+    }
+]
