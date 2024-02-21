@@ -8,5 +8,10 @@
         "questions": "Link a case to contact based on supplied Email, If supplied email match an existing Contact's email the case should link with that contact else create new contact and link that case with it",
         "answers": "Check case Trigger",
         "no": 2
+    },
+    {
+        "questions": "Create a related contact whenever create Contact checkbox is checked on Account",
+        "answers": "Check Account Trigger",
+        "no": 3
     }
 ]
