@@ -5,12 +5,12 @@ public class OpportunityTriggerHandler {
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
-        createdOpportunityRole(newOpps, oldOpps);
+        // createdOpportunityRole(newOpps, oldOpps);
     }
 
     //logic-functions
 
-    //problem #5
+    //problem #6
     private static void createdOpportunityRole(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps){
         Map<Id, String> accIdsToOppTypeMap = new Map<Id, String>();
 

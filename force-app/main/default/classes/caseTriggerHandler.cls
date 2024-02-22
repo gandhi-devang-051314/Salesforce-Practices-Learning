@@ -63,4 +63,37 @@ public class caseTriggerHandler {
             }
         }
     }
+
+    //problem #5
+    private static void followupTaskOnPrimaryContact(List<Case> newCases, Map<Id, Case> oldCases){
+        Set<Id> accIds = new Set<Id>();
+
+        for (Case c : newCases) {
+            if(
+                (oldCases == null && newCases.Create_Task__c == true) ||
+                (oldCases != null && oldCases.get(c.Id).Create_Task__c == false && newCases.Create_Task__c == true)
+            ){
+                accIds.add(c.AccountId);
+            }
+        }
+
+        List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE AccountId IN :accIds AND Primary_Contact__c = true];
+
+        if(!conList.isEmpty()){
+            List<Task> taskList = new List<Task>();
+            for (Contact con : conList) {
+                Task t = new Task(
+                    Subject = 'Followup Task',
+                    Status = 'In Progress',
+                    WhoId = con.Id,
+                    WhatId = con.AccountId
+                );
+                taskList.add(t);
+            }
+
+            if(!taskList.isEmpty()){
+                insert taskList;
+            }
+        }
+    }
 }

@@ -15,13 +15,18 @@
         "no": 3
     },
     {
+        "questions": "Whenever create task checkbox is checked on Account, followup task is created on Primary Contact of Account",
+        "answers": "Check Account Trigger",
+        "no": 4
+    },
+    {
         "questions": "Whenever escalation required gets checked for Case on Account, A followup task gets created on Primary contact of that Account",
         "answers": "Check Case Trigger",
-        "no": 4
+        "no": 5
     },
     {
         "questions": "Whenever new Opportunity gets updated then insert new OpportunityContact Role according to Opportunity type. Delete the existing OpportunityContact and there is no contact on Opportunity then show error",
         "answers": "Check Opportunity Trigger",
-        "no": 5
+        "no": 6
     }
 ]
