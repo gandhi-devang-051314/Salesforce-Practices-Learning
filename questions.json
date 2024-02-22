@@ -13,5 +13,10 @@
         "questions": "Create a related contact whenever create Contact checkbox is checked on Account",
         "answers": "Check Account Trigger",
         "no": 3
+    },
+    {
+        "questions": "Whenever create task checkbox is checked on Account, followup task is created on Primary Contact of Account",
+        "answers": "Check Account Trigger",
+        "no": 4
     }
 ]
