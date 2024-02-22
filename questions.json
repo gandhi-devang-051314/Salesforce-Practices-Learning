@@ -13,5 +13,15 @@
         "questions": "Create a related contact whenever create Contact checkbox is checked on Account",
         "answers": "Check Account Trigger",
         "no": 3
+    },
+    {
+        "questions": "Whenever escalation required gets checked for Case on Account, A followup task gets created on Primary contact of that Account",
+        "answers": "Check Case Trigger",
+        "no": 4
+    },
+    {
+        "questions": "Whenever new Opportunity gets updated then insert new OpportunityContact Role according to Opportunity type. Delete the existing OpportunityContact and there is no contact on Opportunity then show error",
+        "answers": "Check Opportunity Trigger",
+        "no": 5
     }
 ]
