@@ -28,5 +28,10 @@
         "questions": "Whenever new Opportunity gets updated then insert new OpportunityContact Role according to Opportunity type. Delete the existing OpportunityContact and there is no contact on Opportunity then show error",
         "answers": "Check Opportunity Trigger",
         "no": 6
+    },
+    {
+        "questions": "Update the account rating according to Number of closed cases related to Account",
+        "answers": "Check Case Trigger",
+        "no": 7
     }
 ]

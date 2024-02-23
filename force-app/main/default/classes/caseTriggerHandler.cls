@@ -8,6 +8,16 @@ public class caseTriggerHandler {
         // suppliedEmail(newCases, oldCases);
     }
 
+    public static void afterInsert(List<Case> newCases){
+        // followupTaskOnPrimaryContact(newCases, null);
+        updateAccountRatingBasedOnClosedCases(newCases, null);
+    }
+
+    public static void afterUpdate(List<Case> newCases, Map<Id, Case> oldCases){
+        // followupTaskOnPrimaryContact(newCases, oldCases);
+        updateAccountRatingBasedOnClosedCases(newCases, oldCases);
+    }
+
     //problem statements
     //Problem #2
     private static void suppliedEmail(List<Case> newCases, Map<Id, Case> oldCases){
@@ -68,14 +78,14 @@ public class caseTriggerHandler {
     private static void followupTaskOnPrimaryContact(List<Case> newCases, Map<Id, Case> oldCases){
         Set<Id> accIds = new Set<Id>();
 
-        for (Case c : newCases) {
-            if(
-                (oldCases == null && newCases.Create_Task__c == true) ||
-                (oldCases != null && oldCases.get(c.Id).Create_Task__c == false && newCases.Create_Task__c == true)
-            ){
-                accIds.add(c.AccountId);
-            }
-        }
+        // for (Case c : newCases) {
+        //     if(
+        //         //(oldCases == null && newCases.Create_Task__c == true) ||
+        //         //(oldCases != null && oldCases.get(c.Id).Create_Task__c == false && newCases.Create_Task__c == true)
+        //     ){
+        //         accIds.add(c.AccountId);
+        //     }
+        // }
 
         List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE AccountId IN :accIds AND Primary_Contact__c = true];
 
@@ -93,6 +103,50 @@ public class caseTriggerHandler {
 
             if(!taskList.isEmpty()){
                 insert taskList;
+            }
+        }
+    }
+
+    //problem #7
+    private static void updateAccountRatingBasedOnClosedCases(List<Case> newCases, Map<Id, Case> oldCases){
+        Set<Id> accIds = new Set<Id>();
+
+        for (Case ca : newCases) {
+            if(
+                (oldCases == null && ca.Status == 'Working') ||
+                (oldCases != null && oldCases.get(ca.Id).Status != 'Working' && ca.Status == 'Working')
+            ){
+                accIds.add(ca.AccountId);
+            }
+        }
+
+        List<AggregateResult> closedCasesOnAccount = [SELECT COUNT(Id) numberOfCases, AccountId FROM Case WHERE AccountId IN :accIds AND Status = 'Closed' GROUP BY AccountId];
+        Map<Id, Account> accToUpdate = new Map<Id, Account>();
+
+        for(AggregateResult ar : closedCasesOnAccount){
+            Integer cases = Integer.valueOf(ar.get('numberOfCases'));
+            String accId = String.valueOf(ar.get('AccountId'));
+
+            Account ac = new Account();
+            ac.Id = accId;
+
+            if(cases <= 2){
+                ac.Rating = 'Cold';
+            }
+            else if(cases > 2 && cases <= 5){
+                ac.Rating = 'Warm';
+            }
+            else if(cases > 5){
+                ac.Rating = 'Hot';
+            }
+            accToUpdate.put(ac.Id, ac);
+        }
+
+        if(accToUpdate != null && accToUpdate.size() > 0){
+            try {
+                update accToUpdate.values();
+            } catch (Exception e) {
+                System.debug('DML Exception!');
             }
         }
     }
