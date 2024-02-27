@@ -1,4 +1,4 @@
-trigger caseTrigger on Case (before insert, before update, after insert, after update) {
+trigger caseTrigger on Case (before insert, before update, after insert, after update, after delete, after undelete) {
     switch on Trigger.operationType {
         when BEFORE_INSERT {
             caseTriggerHandler.beforeInsert(Trigger.new);
@@ -11,6 +11,12 @@ trigger caseTrigger on Case (before insert, before update, after insert, after u
         }
         when AFTER_UPDATE {
             caseTriggerHandler.afterUpdate(Trigger.new, Trigger.oldMap);
+        }
+        when AFTER_DELETE{
+            caseTriggerHandler.afterDelete(Trigger.oldMap);
+        }
+        when AFTER_UNDELETE{
+            caseTriggerHandler.afterUndelete(Trigger.new);
         }
     }
 }

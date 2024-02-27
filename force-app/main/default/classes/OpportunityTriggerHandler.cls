@@ -1,11 +1,12 @@
 public class OpportunityTriggerHandler {
 
     public static void afterInsert(List<Opportunity> newOpps) {
-
+        //createUpdateTasks(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
         // createdOpportunityRole(newOpps, oldOpps);
+        //createUpdateTasks(newOpps, oldOpps);
     }
 
     //logic-functions
@@ -51,6 +52,58 @@ public class OpportunityTriggerHandler {
             delete existingOpConList;
 
             insert opConRoleList;
+        }
+    }
+
+    //problem #10
+    private static void createUpdateTasks(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps){
+        Map<Id, String> oppIds = new Map<Id, String>();
+
+        for (Opportunity op : newOpps) {
+            if(
+                (oldOpps == null && op.StageName != null) ||
+                (oldOpps != null && oldOpps.get(op.Id).StageName != op.StageName && op.StageName != null)
+            ){
+                oppIds.put(op.Id, op.StageName);
+            }
+        }
+
+        if(oppIds != null && oppIds.size() > 0){
+            List<Task> taskList = [SELECT Id, WhatId, Subject, Status, Description FROM Task WHERE WhatId IN :oppIds.keySet()];
+            Map<Id, Task> opIdToTaskMap = new Map<Id, Task>();
+            List<Task> newTaskList = new List<Task>();
+
+            if(taskList != null && taskList.size() > 0){
+
+                for (Task t : taskList) {
+                    opIdToTaskMap.put(t.WhatId, t);
+                }
+            }
+
+            for (Id op : oppIds.keySet()) {
+                if(opIdToTaskMap.containsKey(op)){
+                    Task t = opIdToTaskMap.get(op);
+                    t.Description = oppIds.get(op);
+                    newTaskList.add(t);
+                }
+                else{
+                    Task t = new Task(
+                        WhatId = op,
+                        Subject = 'New Creation!',
+                        Status = 'Not Started',
+                        Description = oppIds.get(op)
+                    );
+                    newTaskList.add(t);
+                }
+            }
+
+            if(newTaskList != null && newTaskList.size() > 0){
+                try {
+                    upsert newTaskList;
+                } catch (Exception e) {
+                    System.debug('Exception'+e);
+                }
+            }
         }
     }
 }

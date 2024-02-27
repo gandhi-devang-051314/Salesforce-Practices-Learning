@@ -33,5 +33,25 @@
         "questions": "Update the account rating according to Number of closed cases related to Account",
         "answers": "Check Case Trigger",
         "no": 7
+    },
+    {
+        "questions": "Calculate number of cases for each account based on their status, (insert, update, delete, undelete)",
+        "answers": "Check Case Trigger",
+        "no": 8
+    },
+    {
+        "questions": "Count OpportunityLineItem whose ListPrice is greater than 50000 associated with opportunity and display that count on Account's custom field",
+        "answers": "Check OpportunityLineItem Trigger",
+        "no": 9
+    },
+    {
+        "questions": "Create/ Update Tasks based on Opportunity Stage Changes",
+        "answers": "Check Task Trigger",
+        "no": 10
+    },
+    {
+        "questions": "Auto close opportunities with probability greater than 70% when checkbox is checked on Account",
+        "answers": "Check Account Trigger",
+        "no": 11
     }
 ]

@@ -10,12 +10,22 @@ public class caseTriggerHandler {
 
     public static void afterInsert(List<Case> newCases){
         // followupTaskOnPrimaryContact(newCases, null);
-        updateAccountRatingBasedOnClosedCases(newCases, null);
+        //updateAccountRatingBasedOnClosedCases(newCases, null);
+        //countCaseStatusOnAccount(newCases, null);
     }
 
     public static void afterUpdate(List<Case> newCases, Map<Id, Case> oldCases){
         // followupTaskOnPrimaryContact(newCases, oldCases);
-        updateAccountRatingBasedOnClosedCases(newCases, oldCases);
+        //updateAccountRatingBasedOnClosedCases(newCases, oldCases);
+        //countCaseStatusOnAccount(newCases, null);
+    }
+
+    public static void afterDelete(Map<Id, Case> oldCases){
+        //countCaseStatusOnAccount(null, oldCases);
+    }
+
+    public static void afterUndelete(List<Case> newCases){
+        //countCaseStatusOnAccount(newCases, null);
     }
 
     //problem statements
@@ -149,5 +159,97 @@ public class caseTriggerHandler {
                 System.debug('DML Exception!');
             }
         }
+    }
+
+    //problem #8
+    private static void countCaseStatusOnAccount(List<Case> newCases, Map<Id, Case> oldCases){
+        Set<Id> accIds = new Set<Id>();
+        
+        if(newCases != null && newCases.size() > 0){
+            for (Case c : newCases) {
+                if(
+                    (oldCases == null && c.Status != null && c.AccountId != null) ||
+                    (oldCases != null && c.Status != oldCases.get(c.Id).Status && c.AccountId != null)
+                ){
+                    accIds.add(c.AccountId);
+                }
+            }
+        }
+        else{ //for AFTER_DELETE
+            for (Case c : oldCases.values()) {
+                if(
+                    c.Status != null && c.AccountId != null
+                ){
+                    accIds.add(c.AccountId);
+                }
+            }
+        }
+
+        if(accIds != null && accIds.size() > 0){
+            List<AggregateResult> caseCountList = [SELECT COUNT(Id)numberOfCases, Status, AccountId FROM Case WHERE AccountId IN :accIds GROUP BY Status, AccountId];
+            Map<Id, CaseStatusOnAccount> accountStatusMap = new Map<Id, CaseStatusOnAccount>();
+            List<Account> acList = new List<Account>();
+
+            if(caseCountList != null && caseCountList.size() > 0){
+
+                for (AggregateResult ar : caseCountList) {
+                    Id accId = (Id)ar.get('AccountId');
+                    String caseStatus = String.valueOf(ar.get('Status'));
+                    Integer no = Integer.valueOf(ar.get('numberOfCases'));
+
+                    if(accountStatusMap.containsKey(accId)){
+                        CaseStatusOnAccount cs = accountStatusMap.get(accId);
+                        if(caseStatus == 'New'){
+                            cs.NewCase = no;
+                        }
+                        else if(caseStatus == 'Working'){
+                            cs.WorkingCase = no;
+                        }
+                        else if(caseStatus == 'Escalated'){
+                            cs.EscalatedCase = no;
+                        }
+                        else if(caseStatus == 'Closed'){
+                            cs.ClosedCase = no;
+                        }
+                        accountStatusMap.put(accId, cs);
+                    }
+                    else{
+                        CaseStatusOnAccount cs = new CaseStatusOnAccount();
+                        if(caseStatus == 'New'){
+                            cs.NewCase = no;
+                        }
+                        else if(caseStatus == 'Working'){
+                            cs.WorkingCase = no;
+                        }
+                        else if(caseStatus == 'Escalated'){
+                            cs.EscalatedCase = no;
+                        }
+                        else if(caseStatus == 'Closed'){
+                            cs.ClosedCase = no;
+                        }
+                        accountStatusMap.put(accId, cs);
+                    }
+                }
+
+                for(Id acid : accountStatusMap.keySet()){
+                    Account ac = new Account(
+                        Id = acid,
+                        Case_Summary__c = JSON.serialize(accountStatusMap.get(acid))
+                    );
+                    acList.add(ac);
+                }
+
+                if(acList != null && acList.size() > 0){
+                    update acList;
+                }
+            }
+        }
+    }
+
+    public class CaseStatusOnAccount{
+        public Integer NewCase = 0;
+        public Integer WorkingCase = 0;
+        public Integer EscalatedCase = 0;
+        public Integer ClosedCase = 0;
     }
 }
