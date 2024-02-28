@@ -53,5 +53,15 @@
         "questions": "Auto close opportunities with probability greater than 70% when checkbox is checked on Account",
         "answers": "Check Account Trigger",
         "no": 11
+    },
+    {
+        "questions": "Show max closed opportuity amount on account without aggregate function",
+        "answers": "Check Opportunity Trigger",
+        "no": 12
+    },
+    {
+        "questions":"When user gets deactivated from org then assign all Open opportunity records to the manager",
+        "answers": "Check User Trigger",
+        "no": 13
     }
 ]

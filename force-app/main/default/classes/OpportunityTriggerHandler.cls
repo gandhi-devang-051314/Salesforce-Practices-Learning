@@ -2,11 +2,21 @@ public class OpportunityTriggerHandler {
 
     public static void afterInsert(List<Opportunity> newOpps) {
         //createUpdateTasks(newOpps, null);
+        // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
         // createdOpportunityRole(newOpps, oldOpps);
         //createUpdateTasks(newOpps, oldOpps);
+        // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, oldOpps);
+    }
+
+    public static void afterDelete(Map<Id, Opportunity> oldOpps){
+        // maxAmountOfClosedOpportunityWithoutAggrgate(null, oldOpps);
+    }
+
+    public static void afterUndelete(List<Opportunity> newOpps){
+        // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
     }
 
     //logic-functions
@@ -100,6 +110,61 @@ public class OpportunityTriggerHandler {
             if(newTaskList != null && newTaskList.size() > 0){
                 try {
                     upsert newTaskList;
+                } catch (Exception e) {
+                    System.debug('Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #12
+    private static void maxAmountOfClosedOpportunityWithoutAggrgate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps){
+        Set<Id> accIds = new Set<Id>();
+
+        if(newOpps != null && newOpps.size() > 0){
+            for (Opportunity op : newOpps) {
+                if(
+                    (oldOpps == null && op.Amount != null && op.AccountId != null && op.CloseDate != null) ||
+                    (oldOpps != null && oldOpps.get(op.Id).Amount != op.Amount && op.Amount != null && op.AccountId != null && op.CloseDate != null)
+                ){
+                    accIds.add(op.AccountId);
+                }
+            }
+        }
+        else{
+            for (Opportunity op : oldOpps.values()) {
+                if(op.Amount != null && op.AccountId != null && op.CloseDate != null){
+                    accIds.add(op.AccountId);
+                }
+            }
+        }
+
+        if(accIds != null && accIds.size() > 0){
+            List<Opportunity> opList = [SELECT Id, Amount, AccountId FROM Opportunity WHERE AccountId IN :accIds AND CloseDate != null AND StageName LIKE 'Closed %'];
+            Map<Id, Account> accMap = new Map<Id, Account>();
+
+            if(opList != null && opList.size() > 0){
+                for (Opportunity op : opList) {
+                    if(accMap.containsKey(op.AccountId)){
+                        Account ac = accMap.get(op.AccountId);
+                        if(op.Amount > ac.Max_Closed_Opportunity_Amount__c){
+                            ac.Max_Closed_Opportunity_Amount__c = op.Amount;
+                            accMap.put(op.AccountId, ac);
+                        }
+                    }
+                    else{
+                        Account ac = new Account(
+                            Id = op.AccountId,
+                            Max_Closed_Opportunity_Amount__c = op.Amount
+                        );
+                        accMap.put(op.AccountId, ac);
+                    }
+                }
+            }
+
+            if(accMap != null && accMap.values().size() > 0){
+                try {
+                    update accMap.values();
                 } catch (Exception e) {
                     System.debug('Exception'+e);
                 }
