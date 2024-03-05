@@ -63,5 +63,15 @@
         "questions":"When user gets deactivated from org then assign all Open opportunity records to the manager",
         "answers": "Check User Trigger",
         "no": 13
+    },
+    {
+        "questions": "Prevent duplication of opportunityContactRole on opportunities and blocked insertion of closed opportunities",
+        "answers": "Check OpportunityContactRole Trigger",
+        "no": 14
+    },
+    {
+        "questions": "Whenever case status update then latest case number & status in parent account description, update related task status value in same as case status value",
+        "answers": "Check Case Trigger",
+        "no": 15
     }
 ]

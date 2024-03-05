@@ -18,6 +18,7 @@ public class caseTriggerHandler {
         // followupTaskOnPrimaryContact(newCases, oldCases);
         //updateAccountRatingBasedOnClosedCases(newCases, oldCases);
         //countCaseStatusOnAccount(newCases, null);
+        // updateAccountDescriptionAndTaskStatus(newCases, oldCases);
     }
 
     public static void afterDelete(Map<Id, Case> oldCases){
@@ -251,5 +252,49 @@ public class caseTriggerHandler {
         public Integer WorkingCase = 0;
         public Integer EscalatedCase = 0;
         public Integer ClosedCase = 0;
+    }
+
+    //problem #15
+    private static void updateAccountDescriptionAndTaskStatus(List<Case> newCases, Map<Id, Case> oldCases){
+        Map<Id, Case> caseToStatus = new Map<Id, Case>();
+
+        for (Case c : newCases) {
+            if(
+                oldCases != null && c.Status != oldCases.get(c.Id).Status && c.Status != null
+            ){
+                caseToStatus.put(c.Id, c);
+            }
+        }
+
+        if(caseToStatus != null && !caseToStatus.isEmpty()){
+            List<Case> caseList = [SELECT Id, AccountId FROM Case WHERE Id IN :caseToStatus.keySet() AND AccountId != null];
+            List<Task> taskList = [SELECT Id, Status, WhatId FROM Task WHERE What.Type = 'Case' AND WhatId IN :caseToStatus.keySet()];
+            List<sObject> recordsToUpdate = new List<sObject>(); 
+
+            if(caseList != null && caseList.size() > 0){
+                for (Case c : caseList) {
+                    Account ac = new Account(
+                        Id = c.AccountId,
+                        Description = 'Case Updates=> '+caseToStatus.get(c.Id).CaseNumber+' & '+caseToStatus.get(c.Id).Status
+                    );
+                    recordsToUpdate.add(ac);
+                }
+            }
+
+            if(taskList != null && taskList.size() > 0){
+                for (Task t : taskList) {
+                    t.Status = caseToStatus.get(t.WhatId).Status;
+                    recordsToUpdate.add(t);
+                }
+            }
+
+            if(recordsToUpdate != null && recordsToUpdate.size() > 0){
+                try {
+                    update recordsToUpdate;
+                } catch (Exception e) {
+                    System.debug('Exception'+e);
+                }
+            }
+        }
     }
 }
