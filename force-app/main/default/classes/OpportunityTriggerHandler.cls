@@ -3,20 +3,24 @@ public class OpportunityTriggerHandler {
     public static void afterInsert(List<Opportunity> newOpps) {
         //createUpdateTasks(newOpps, null);
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
+        // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
         // createdOpportunityRole(newOpps, oldOpps);
         //createUpdateTasks(newOpps, oldOpps);
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, oldOpps);
+        // updateAccountDescriptionToMaxOpprtunityName(newOpps, oldOpps);
     }
 
     public static void afterDelete(Map<Id, Opportunity> oldOpps){
         // maxAmountOfClosedOpportunityWithoutAggrgate(null, oldOpps);
+        // updateAccountDescriptionToMaxOpprtunityName(null, oldOpps);
     }
 
     public static void afterUndelete(List<Opportunity> newOpps){
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
+        // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
     }
 
     //logic-functions
@@ -167,6 +171,55 @@ public class OpportunityTriggerHandler {
                     update accMap.values();
                 } catch (Exception e) {
                     System.debug('Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #16
+    private static void updateAccountDescriptionToMaxOpprtunityName(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps){
+        Set<Id> accIds = new Set<Id>();
+        
+        if(newOpps != null && newOpps.size() > 0){
+            for (Opportunity op : newOpps) {
+                if(
+                    (oldOpps == null && op.AccountId != null && op.Amount != null) ||
+                    (oldOpps != null && oldOpps.get(op.Id).Amount != op.Amount && op.Amount != null && op.AccountId != null) 
+                ){
+                    accIds.add(op.AccountId);
+                }
+            }
+        }
+        else{ //after_delete case
+            for (Opportunity op : oldOpps.values()) {
+                if(op.AccountId != null && op.Amount != null){
+                    accIds.add(op.AccountId);
+                }
+            }
+        }
+
+        if(accIds != null && accIds.size() > 0){
+            List<Account> accList = [SELECT Id, Description, (SELECT Id, Name, Amount FROM Opportunities ORDER BY Amount DESC LIMIT 1) FROM Account WHERE Id IN :accIds];
+            List<Account> accUpdateList = new List<Account>();
+
+            if (accList != null && accList.size() > 0) {
+                for (Account ac : accList) {
+                    List<Opportunity> oppList = ac.Opportunities;
+                    if(oppList != null && oppList.size() > 0){
+                        Account a = new Account(
+                            Id = ac.Id,
+                            Description = 'Max Opportunity Amount--->'+oppList[0].Amount+' Max Opportunity Name--->'+oppList[0].Name
+                        );
+                        accUpdateList.add(a);
+                    }
+                }
+            }
+
+            if(accUpdateList != null && accUpdateList.size() > 0){
+                try {
+                    update accUpdateList;
+                } catch (Exception e) {
+                    System.debug('DML Exception'+e.getMessage());
                 }
             }
         }

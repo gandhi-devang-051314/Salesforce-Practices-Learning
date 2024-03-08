@@ -73,5 +73,11 @@
         "questions": "Whenever case status update then latest case number & status in parent account description, update related task status value in same as case status value",
         "answers": "Check Case Trigger",
         "no": 15
+    },
+    {
+
+        "questions": "Update the account description with opportunity name that has highest amount",
+        "answers": "Check Opportunity Trigger",
+        "no": 16
     }
 ]
