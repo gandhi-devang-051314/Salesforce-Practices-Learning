@@ -79,5 +79,15 @@
         "questions": "Update the account description with opportunity name that has highest amount",
         "answers": "Check Opportunity Trigger",
         "no": 16
+    },
+    {
+        "questions": "Link case to Primary contact of Account and create Event on that Contact with same subject as Case",
+        "answers": "Check case Trigger",
+        "no": 17
+    },
+    {
+        "questions": "Delete all related Opportunities and check do not contact checkbox on related contact when User changes Account Status from Active to Inactive",
+        "answers" : "Check Account Trigger",
+        "no": 18
     }
 ]

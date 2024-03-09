@@ -2,6 +2,7 @@ public class caseTriggerHandler {
 
     public static void beforeInsert(List<Case> newCases){
         // suppliedEmail(newCases, null);
+        // linkCaseToPrimaryContactAndCreateEventWithSameSubject(newCases, null);
     }
 
     public static void beforeUpdate(List<Case> newCases, Map<Id, Case> oldCases){
@@ -293,6 +294,57 @@ public class caseTriggerHandler {
                     update recordsToUpdate;
                 } catch (Exception e) {
                     System.debug('Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #17
+    private static void linkCaseToPrimaryContactAndCreateEventWithSameSubject(List<Case> newCases, Map<Id, Case> oldCases){
+        Set<Id> accIds = new Set<Id>();
+
+        for (Case c : newCases) {
+            if(
+                (oldCases == null && c.AccountId != null) ||
+                (oldCases != null && oldCases.get(c.Id).AccountId != c.AccountId && c.AccountId != null)
+            ){
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if(accIds != null && accIds.size() > 0){
+            List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE Primary_Contact__c = true AND AccountId IN :accIds];
+            Map<Id, Id> accIdToConId = new Map<Id, Id>();
+            List<Event> eventList = new List<Event>();
+
+            if(conList != null && conList.size() > 0){
+                for (Contact c : conList) {
+                    accIdToConId.put(c.AccountId, c.Id);
+                }
+            }
+
+            for (Case c : newCases) {
+                if(c.AccountId != null && accIdToConId.containsKey(c.AccountId)){
+                    c.ContactId = accIdToConId.get(c.AccountId);
+
+                    Event e = new Event(
+                        Subject = c.Subject,
+                        WhoId = accIdToConId.get(c.AccountId),
+                        StartDateTime = Datetime.now(),
+                        EndDateTime = Datetime.now().addDays(2)
+                    );
+                    eventList.add(e);
+                }
+                else{
+                    c.addError('There is no primary contact on this case!');
+                }
+            }
+
+            if(eventList != null && eventList.size() > 0){
+                try {
+                    insert eventList;
+                } catch (Exception e) {
+                    System.debug('DML insertion error!'+e);
                 }
             }
         }

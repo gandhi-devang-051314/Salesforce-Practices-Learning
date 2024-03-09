@@ -3,11 +3,13 @@ public class accountTriggerHandler {
     public static void afterInsert(List<Account> newAccs) {
         // createRelatedContact(newAccs, null);
         //closeOpps(newAccs, null);
+        // deleteOpportunitesDoNotContactInactiveAccount(newAccs, null);
     }
 
     public static void afterUpdate(List<Account> newAccs, Map<Id, Account> oldAccs) {
         // createRelatedContact(newAccs, oldAccs);
         //closeOpps(newAccs, oldAccs);
+        // deleteOpportunitesDoNotContactInactiveAccount(newAccs, oldAccs);
     }
 
     //logic-functions
@@ -60,6 +62,45 @@ public class accountTriggerHandler {
                     update oppList;
                 } catch (Exception e) {
                     System.debug('Exception handled'+e);
+                }
+            }
+        }
+    }
+
+    //problem #18
+    private static void deleteOpportunitesDoNotContactInactiveAccount(List<Account> newAccs, Map<Id, Account> oldAccs){
+        Set<Id> accIds = new Set<Id>();
+
+        for (Account ac : newAccs) {
+            if(
+                (oldAccs == null && !ac.Active__c) ||
+                (oldAccs != null && oldAccs.get(ac.Id).Active__c != ac.Active__c && !ac.Active__c)
+            ){
+                accIds.add(ac.Id);
+            }
+        }
+
+        if(accIds != null && accIds.size() > 0){
+            List<Opportunity> oppList = [SELECT Id FROM Opportunity WHERE AccountId IN :accIds];
+            List<Contact> conList = [SELECT Id, Primary_Contact__c FROM Contact WHERE AccountId IN :accIds];
+
+            if(conList != null && conList.size() > 0){
+                for (Contact con : conList) {
+                    con.Primary_Contact__c = false;
+                }
+
+                try {
+                    update conList;
+                } catch (Exception e) {
+                    System.debug('DML Error Contact updation!'+e);
+                }
+            }
+
+            if(oppList != null && oppList.size() > 0){
+                try {
+                    delete oppList;
+                } catch (Exception e) {
+                    System.debug('DML Error delete Opportunites!'+e);
                 }
             }
         }
