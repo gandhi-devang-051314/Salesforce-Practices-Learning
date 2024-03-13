@@ -89,5 +89,10 @@
         "questions": "Delete all related Opportunities and check do not contact checkbox on related contact when User changes Account Status from Active to Inactive",
         "answers" : "Check Account Trigger",
         "no": 18
+    },
+    {
+        "questions": "On Creation of contact, create community user with same email address and assign them a sales team public group",
+        "answers": "Check Contact Trigger",
+        "no": 19
     }
 ]
