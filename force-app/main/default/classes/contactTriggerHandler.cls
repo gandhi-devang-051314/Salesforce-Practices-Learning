@@ -2,10 +2,13 @@ public with sharing class contactTriggerHandler {
 
     public static void beforeInsert(List<Contact> newContacts){
         // primaryContact(newContacts);
+        // preventDuplicates(newContacts, null);
+        // errorOnThirdContactOnAccount(newContacts);
     }
 
     public static void beforeUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts){
         // primaryContact(newContacts);
+        // preventDuplicates(newContacts, oldContacts);
     }
 
     public static void afterInsert(List<Contact> newContacts) {
@@ -103,6 +106,83 @@ public with sharing class contactTriggerHandler {
                         insert assignUserToGroupList;
                     } catch (Exception e) {
                         System.debug('DML Exception while insertion of groupMembers assignment'+e);
+                    }
+                }
+            }
+        }
+    }
+
+    //problem #24
+    private static void preventDuplicates(List<Contact> newContacts, Map<Id, Contact> oldContacts){
+        Set<String> emails = new Set<String>();
+        Set<String> phones = new Set<String>();
+
+        for (Contact c : newContacts) {
+            if(
+                (c.Email != null && oldContacts == null) ||
+                (oldContacts != null && c.Email != null && oldContacts.get(c.Id).Email != c.Email)
+            ){
+                emails.add(c.Email);
+            }
+
+            if(
+                (c.Phone != null && oldContacts != null) ||
+                (oldContacts != null && c.Phone != null && oldContacts.get(c.Id).Phone != c.Phone)
+            ){
+                phones.add(c.Phone);
+            }
+        }
+
+        if (
+            (emails != null && emails.size() > 0) ||
+            (phones != null && phones.size() > 0)
+        ) {
+            List<Contact> conList = [SELECT Id, Phone, Email FROM Contact WHERE Phone IN :phones OR Email IN :emails];
+
+            if (conList != null && conList.size() > 0) {
+                Set<String> duplicateEmails = new Set<String>();
+                Set<String> duplicatePhones = new Set<String>();
+
+                for (Contact c : conList) {
+                    if(c.Email != null){
+                        duplicateEmails.add(c.Email);
+                    }
+
+                    if(c.Phone != null){
+                        duplicatePhones.add(c.Phone);
+                    }
+                }
+
+                for (Contact c : newContacts) {
+                    if(duplicateEmails.contains(c.Email)){
+                        c.addError('Duplicate Email Found on Contact!');
+                    }
+
+                    if(duplicatePhones.contains(c.Phone)){
+                        c.addError('Duplicate Phone found on Contact!');
+                    }
+                }
+            }
+        }
+    }
+
+    //problem #26
+    private static void errorOnThirdContactOnAccount(List<Contact> newContacts){
+        Set<Id> accIds = new Set<Id>();
+
+        for (Contact c : newContacts) {
+            if(c.AccountId != null){
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if(accIds != null && accIds.size() > 0){
+            Map<Id ,Account> accMap = new Map<Id, Account>([SELECT Id, (SELECT Id FROM Contacts) FROM Account WHERE Id IN :accIds]);
+
+            if (accMap != null && accMap.values().size() > 0) {
+                for (Contact c : newContacts) {
+                    if(accMap.containsKey(c.AccountId) && accMap.get(c.AccountId).Contacts.size() > 2){
+                        c.addError('There are already two contacts on parent account!');
                     }
                 }
             }

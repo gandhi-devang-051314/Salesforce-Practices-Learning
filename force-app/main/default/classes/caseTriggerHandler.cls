@@ -13,6 +13,7 @@ public class caseTriggerHandler {
         // followupTaskOnPrimaryContact(newCases, null);
         //updateAccountRatingBasedOnClosedCases(newCases, null);
         //countCaseStatusOnAccount(newCases, null);
+        // latestCaseNumberOnAccount(newCases);
     }
 
     public static void afterUpdate(List<Case> newCases, Map<Id, Case> oldCases){
@@ -345,6 +346,39 @@ public class caseTriggerHandler {
                     insert eventList;
                 } catch (Exception e) {
                     System.debug('DML insertion error!'+e);
+                }
+            }
+        }
+    }
+
+    //problem #25
+    private static void latestCaseNumberOnAccount(List<Case> newCases){
+        Set<Id> Ids = new Set<Id>();
+
+        for (Case c : newCases) {
+            if(c.AccountId != null && c.CaseNumber != null){
+                Ids.add(c.Id);
+            }
+        }
+
+        if(Ids != null && Ids.size() > 0){
+            List<Case> caseList = [SELECT Id, CaseNumber, AccountId FROM Case WHERE Id IN :Ids ORDER BY CreatedDate]; //order by createdDate means latest case last
+            Map<Id, Account> accMap = new Map<Id, Account>(); //avoid duplicate Ids in List because one account has many cases
+
+            if (caseList != null && caseList.size() > 0) {
+                for (Case c : caseList) {
+                    accMap.put(c.AccountId, new Account(
+                        Id = c.AccountId,
+                        Latest_Case_Number__c = c.CaseNumber
+                    ));
+                }
+            }
+
+            if(accMap != null && accMap.values().size() > 0){
+                try {
+                    update accMap.values();
+                } catch (Exception e) {
+                    System.debug('Exception on DML'+e);
                 }
             }
         }

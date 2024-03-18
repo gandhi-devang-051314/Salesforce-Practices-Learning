@@ -1,4 +1,4 @@
-trigger OpportunityLineItemTrigger on OpportunityLineItem (after insert, after update, after delete, after undelete) {
+trigger OpportunityLineItemTrigger on OpportunityLineItem (before insert, after insert, after update, after delete, after undelete) {
     switch on Trigger.operationType {
         when AFTER_INSERT {
             OpportunityLineItemTriggerHandler.afterInsert(Trigger.new);
@@ -11,6 +11,9 @@ trigger OpportunityLineItemTrigger on OpportunityLineItem (after insert, after u
         }
         when AFTER_UNDELETE {
             OpportunityLineItemTriggerHandler.afterUndelete(Trigger.new); 
+        }
+        when BEFORE_INSERT {
+            OpportunityLineItemTriggerHandler.beforeInsert(Trigger.new); 
         }
     }
 }

@@ -94,5 +94,45 @@
         "questions": "On Creation of contact, create community user with same email address and assign them a sales team public group",
         "answers": "Check Contact Trigger",
         "no": 19
+    },
+    {
+        "questions": "Update Account's description by OpportunityLineItem's description which is associated with opportunity",
+        "answers": "Check OpportunityLineItem Trigger",
+        "no": 20
+    },
+    {
+        "questions": "Prevent insertion of OpportunityLineItem if family and Product Family fields of Product and Opportunity is not same",
+        "answers": "Check OpportunityLineItem Trigger",
+        "no": 21
+    },
+    {
+        "questions": "Automate creation of Asset and linking with account on insertion of OpportunityLineItem",
+        "answers" : "Check OpportunityLineItem Trigger",
+        "no": 22
+    },
+    {
+        "questions": "Automatically create related contact on insertion of Account and update client contact Lookup on Account",
+        "answers": "Check Account Trigger",
+        "no": 23
+    },
+    {
+        "questions": "Prevent the duplication of Contacts based on Email and Phone",
+        "answers": "Check Contact Trigger",
+        "no": 24
+    },
+    {
+        "questions": "When case is inserted on any Account, put the latest case number on Account in lastest case number field",
+        "answers": "Check Case Trigger",
+        "no": 25
+    },
+    {
+        "questions": "Fire an error if there are already two contacts present on Account and user tries to add another one contact",
+        "answers": "Check Contact Trigger",
+        "no": 26
+    },
+    {
+        "questions": "When Account is updated, update all related opportunities stage to close lost if an opportunity createdDate is greater than 30 days from today and stage not equals to close won",
+        "answers": "Check Account Trigger",
+        "no": 27
     }
 ]

@@ -2,9 +2,12 @@ public class OpportunityLineItemTriggerHandler {
 
     public static void afterInsert(List<OpportunityLineItem> newOppLine){
         //oppLineItemCountOnAccount(newOppLine, null);
+        // updateAccountDescriptionToOppLineDescription(newOppLine, null);
+        // createAsset(newOppLine);
     }    
     public static void afterUpdate(List<OpportunityLineItem> newOppLine, Map<Id, OpportunityLineItem> oldOppLine){
         //oppLineItemCountOnAccount(newOppLine, oldOppLine);
+        // updateAccountDescriptionToOppLineDescription(newOppLine, oldOppLine);
     }
     public static void afterDelete(Map<Id, OpportunityLineItem> oldOppLine){
         //oppLineItemCountOnAccount(null, oldOppLine);
@@ -13,6 +16,9 @@ public class OpportunityLineItemTriggerHandler {
         //oppLineItemCountOnAccount(newOppLine, null);
     }
 
+    public static void beforeInsert(List<OpportunityLineItem> newOppLine){
+        // preventInsertion(newOppLine);
+    }
 
     //logic functions
 
@@ -58,6 +64,106 @@ public class OpportunityLineItemTriggerHandler {
             if(accList != null && accList.size() > 0){
                 try {
                     update accList;
+                } catch (Exception e) {
+                    System.debug('DML Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #20
+    private static void updateAccountDescriptionToOppLineDescription(List<OpportunityLineItem> newOppLine, Map<Id, OpportunityLineItem> oldOppLine){
+        Map<Id, String> oppIdToOppLineDescMap = new Map<Id, String>();
+
+        for (OpportunityLineItem opi : newOppLine) {
+            if(
+                (oldOppLine == null && opi.OpportunityId != null && opi.Description != null) ||
+                (oldOppLine != null && oldOppLine.get(opi.Id).Description != opi.Description && opi.Description != null && opi.OpportunityId != null)
+            ){
+                oppIdToOppLineDescMap.put(opi.OpportunityId, opi.Description);
+            }
+        }
+
+        if(oppIdToOppLineDescMap != null){
+            List<Opportunity> oppList = [SELECT Id, AccountId FROM Opportunity WHERE Id IN :oppIdToOppLineDescMap.keySet() AND AccountId != null];
+            List<Account> accList = new List<Account>();
+
+            if(oppList != null && oppList.size() > 0){
+                for (Opportunity op : oppList) {
+                    Account ac = new Account(
+                        Id = op.AccountId,
+                        Description = oppIdToOppLineDescMap.get(op.Id)
+                    );
+                    accList.add(ac);
+                }
+            }
+
+            if(accList != null && accList.size() > 0){
+                try {
+                    update accList;
+                } catch (Exception e) {
+                    System.debug('DML Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #21
+    private static void preventInsertion(List<OpportunityLineItem> newOppLine){
+        Set<Id> oppIds = new Set<Id>();
+        Set<Id> proIds = new Set<Id>();
+
+        for (OpportunityLineItem opi : newOppLine) {
+            if(
+                opi.OpportunityId != null && opi.Product2Id != null
+            ){
+                oppIds.add(opi.OpportunityId);
+                proIds.add(opi.Product2Id);
+            }
+        }
+
+        if(oppIds != null && oppIds.size() > 0 && proIds != null && proIds.size() > 0){
+            Map<Id, Opportunity> oppMap = new Map<Id, Opportunity>([SELECT Id, Family__c FROM Opportunity WHERE Id IN :oppIds]);
+            Map<Id, Product2> proMap = new Map<Id, Product2>([SELECT Id, Family FROM Product2 WHERE Id IN :proIds]);
+
+            if(oppMap != null && oppMap.values().size() > 0 && proMap != null && proMap.values().size() > 0){
+                for (OpportunityLineItem opi : newOppLine) {
+                    if(oppMap.get(opi.OpportunityId).Family__c != proMap.get(opi.Product2Id).Family){
+                        opi.addError('Opportunity Family and Product Family must be same!');
+                    }
+                }
+            }
+        }
+    }
+
+    //problem #22
+    private static void createAsset(List<OpportunityLineItem> newOppLine){
+        Map<Id, Id> oppIdToProIdMap = new Map<Id, Id>();
+
+        for (OpportunityLineItem oli : newOppLine) {
+            if(oli.OpportunityId != null && oli.Product2Id != null){
+                oppIdToProIdMap.put(oli.OpportunityId, oli.Product2Id);
+            }
+        }
+
+        if(oppIdToProIdMap != null && oppIdToProIdMap.values().size() > 0){
+            List<Opportunity> oppList = [SELECT Id, AccountId, Account.Name FROM Opportunity WHERE Id IN :oppIdToProIdMap.keySet() AND AccountId != null];
+            List<Asset> assetList = new List<Asset>();
+
+            if (oppList != null && oppList.size() > 0) {
+                for (Opportunity op : oppList) {
+                    Asset a = new Asset(
+                        Name = op.Account.Name + ' OpportunityLineItem',
+                        AccountId = op.AccountId
+                        // Product2Id = oppIdToProIdMap.get(op.Id),
+                    );
+                    assetList.add(a);
+                }
+            }
+
+            if(assetList != null && assetList.size() > 0){
+                try {
+                    insert assetList;
                 } catch (Exception e) {
                     System.debug('DML Exception'+e);
                 }
