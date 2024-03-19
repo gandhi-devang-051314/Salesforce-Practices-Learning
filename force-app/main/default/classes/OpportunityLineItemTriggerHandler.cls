@@ -175,7 +175,7 @@ public class OpportunityLineItemTriggerHandler {
         }
     }
 
-    //problem #29
+    //problem #28
     private static void rollUpCountOnAccount(List<OpportunityLineItem> newOppLine, Map<Id, OpportunityLineItem> oldOppLine){
         Set<Id> oppIds = new Set<Id>();
 
@@ -229,7 +229,7 @@ public class OpportunityLineItemTriggerHandler {
         }
     }
 
-    //problem #30
+    //problem #29
     private static void rollUpCountOnAccountWithOutAggregation(List<OpportunityLineItem> newOppLine, Map<Id, OpportunityLineItem> oldOppLine){
         Set<Id> oppIds = new Set<Id>();
 
