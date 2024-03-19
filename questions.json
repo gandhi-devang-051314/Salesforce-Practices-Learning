@@ -134,5 +134,15 @@
         "questions": "When Account is updated, update all related opportunities stage to close lost if an opportunity createdDate is greater than 30 days from today and stage not equals to close won",
         "answers": "Check Account Trigger",
         "no": 27
+    },
+    {
+        "questions": "Count(RollUp) OpportunityLineItem on Account",
+        "answers": "Check OpportunityLineItem Trigger",
+        "no": 28
+    },
+    {
+        "questions": "Count(RollUp) OpportunityLineItem on Account without Aggregated Query",
+        "answers": "Check OpportunityLineItem Trigger",
+        "no": 29
     }
 ]
