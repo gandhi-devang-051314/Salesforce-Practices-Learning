@@ -188,4 +188,41 @@ public with sharing class contactTriggerHandler {
             }
         }
     }
+
+    //problem #32
+    private static void updateDescriptionOnAccountDescription(List<Contact> newContacts, Map<Id, Contact> oldContacts){
+        Set<Id> accIds = new Set<Id>();
+
+        for (Contact c : newContacts) {
+            if (
+                (oldContacts == null && c.AccountId != null && c.Description != null) ||
+                (oldContacts != null && c.AccountId != null && oldContacts.get(c.Id).Description != c.Description && c.Description != null)
+            ) {
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds != null && accIds.size() > 0) {
+            List<Contact> conList = [SELECT Id, AccountId, Description FROM Contact WHERE AccountId IN :accIds];
+            List<Account> accList = new List<Account>();
+
+            if (conList != null && conList.size() > 0) {
+                for (Contact c : conList) {
+                    Account a = new Account(
+                        Id = c.AccountId,
+                        Description = c.Description
+                    );
+                    accList.add(a);
+                }
+            }
+
+            if(accList != null && accList.size() > 0) {
+                try {
+                    update accList;
+                } catch (Exception e) {
+                    System.debug('DML Exception'+e);
+                }
+            }
+        }
+    }
 }

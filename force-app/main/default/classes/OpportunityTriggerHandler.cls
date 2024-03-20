@@ -4,6 +4,7 @@ public class OpportunityTriggerHandler {
         //createUpdateTasks(newOpps, null);
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
+        // sumOfAmountOnAccount(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
@@ -11,16 +12,19 @@ public class OpportunityTriggerHandler {
         //createUpdateTasks(newOpps, oldOpps);
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, oldOpps);
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, oldOpps);
+        // sumOfAmountOnAccount(newOpps, oldOpps);
     }
 
     public static void afterDelete(Map<Id, Opportunity> oldOpps){
         // maxAmountOfClosedOpportunityWithoutAggrgate(null, oldOpps);
         // updateAccountDescriptionToMaxOpprtunityName(null, oldOpps);
+        // sumOfAmountOnAccount(null, oldOpps);
     }
 
     public static void afterUndelete(List<Opportunity> newOpps){
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
+        // sumOfAmountOnAccount(newOpps, null);
     }
 
     //logic-functions
@@ -220,6 +224,52 @@ public class OpportunityTriggerHandler {
                     update accUpdateList;
                 } catch (Exception e) {
                     System.debug('DML Exception'+e.getMessage());
+                }
+            }
+        }
+    }
+
+    //problem #30
+    private static void sumOfAmountOnAccount(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps){
+        Set<Id> accIds = new Set<Id>();
+
+        if(newOpps != null && newOpps.size() > 0){
+            for (Opportunity op : newOpps) {
+                if (
+                    (oldOpps == null && op.AccountId != null && op.Amount != null) ||
+                    (oldOpps != null && op.AccountId != null && op.Amount != null && oldOpps.get(op.Id).Amount != op.Amount)
+                ) {
+                    accIds.add(op.AccountId);
+                }
+            }
+        }
+        else{ //after undelete
+            for (Opportunity op : oldOpps.values()) {
+                if (op.AccountId != null && op.Amount != null) {
+                    accIds.add(op.AccountId);
+                }
+            }
+        }
+
+        if (accIds != null && accIds.size() > 0) {
+            List<AggregateResult> oppList = [SELECT SUM(Amount)totalAmount, AccountId FROM Opportunity WHERE AccountId IN :accIds GROUP BY AccountId];
+            List<Account> accList = new List<Account>();
+
+            if (oppList != null && oppList.size() > 0) {
+                for (AggregateResult ar : oppList) {
+                    Account a = new Account(
+                        Id = (Id)ar.get('AccountId'),
+                        Total_Amount_of_Opportunities__c = Integer.valueOf(ar.get('totalAmount'))
+                    );
+                    accList.add(a);
+                }
+            }
+
+            if(accList != null && accList.size() > 0){
+                try {
+                    update accList;
+                } catch (Exception e) {
+                    System.debug('DML Exception'+e);
                 }
             }
         }

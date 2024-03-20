@@ -144,5 +144,20 @@
         "questions": "Count(RollUp) OpportunityLineItem on Account without Aggregated Query",
         "answers": "Check OpportunityLineItem Trigger",
         "no": 29
+    },
+    {
+        "questions": "SUM of all related opportunities amount of an Account",
+        "answers": "Check Opportunity Trigger",
+        "no": 30
+    },
+    {
+        "questions": "Prevent the duplication of Account based on Name whenever record in inserted or updated",
+        "answers": "Check Account Trigger",
+        "no": 31
+    },
+    {
+        "questions": "Whenever contact's description is updated it's parent Account's description should also get updated by it",
+        "answers": "Check Contact Trigger",
+        "no": 32
     }
 ]

@@ -1,5 +1,9 @@
 public class accountTriggerHandler {
 
+    public static void beforeInsert(List<Account> newAccs) {
+        // preventDuplicateAccountOnName(newAccs);
+    }
+
     public static void afterInsert(List<Account> newAccs) {
         // createRelatedContact(newAccs, null);
         //closeOpps(newAccs, null);
@@ -177,6 +181,36 @@ public class accountTriggerHandler {
                     update updatedOppList;
                 } catch (Exception e) {
                     System.debug('Exception in DML'+e);
+                }
+            }
+        }
+    }
+
+    //problem #31
+    private static void preventDuplicateAccountOnName(List<Account> newAccs){
+        Set<String> accNames = new Set<String>();
+
+        for (Account ac : newAccs) {
+            if (ac.Name != null) {
+                accNames.add(ac.Name);
+            }
+        }
+
+        if (accNames != null && accNames.size() > 0) {
+            List<Account> accList = [SELECT Id, Name FROM Account WHERE Name IN :accNames];
+            Map<String, Account> nameToAccount = new Map<String, Account>();
+
+            if (accList != null && accList.size() > 0) {
+                for (Account a : accList) {
+                    nameToAccount.put(a.Name, a);   
+                }
+            }
+
+            if(nameToAccount != null && nameToAccount.size() > 0){
+                for (Account a : newAccs) {
+                    if(nameToAccount.containsKey(a.Name)){
+                        a.addError('Duplicate Name Found!');
+                    }
                 }
             }
         }
