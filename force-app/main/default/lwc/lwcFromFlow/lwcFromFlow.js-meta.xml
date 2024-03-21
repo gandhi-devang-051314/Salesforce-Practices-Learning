@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__RecordPage</target>
+        <target>lightning__FlowScreen</target>
+    </targets>
+    <masterLabel>LWC From Flow</masterLabel>
+    <targetConfigs>
+        <targetConfig targets="lightning__FlowScreen">
+            <propertyType name="T" extends="SObject" label="Select a SObject" description="Select a SObject" />
+            <property name="records" type="{T[]}" label="Records" description="List Of Records"/>
+            <property name="recordId" type="String" label="RecordId" description="RecordId"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>
