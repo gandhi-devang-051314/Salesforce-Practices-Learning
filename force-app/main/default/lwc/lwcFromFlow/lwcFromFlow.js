@@ -1,4 +1,5 @@
 import { LightningElement, api } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class LwcFromFlow extends LightningElement {
     @api recordId;
@@ -19,5 +20,21 @@ export default class LwcFromFlow extends LightningElement {
     handleUploadFinished(event) {
         event.stopPropagation();
         console.log('data => ', JSON.stringify(event.detail.data));
+    }
+
+    handleFileDelete(event){
+        event.stopPropagation();
+        console.log('data => ', JSON.stringify(event.detail.data));
+        this.showToast(event.detail.data.title, event.detail.data.message, event.detail.data.variant);
+    }
+
+    showToast(title, message, variant){
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title,
+                message,
+                variant
+            })
+        );
     }
 }
