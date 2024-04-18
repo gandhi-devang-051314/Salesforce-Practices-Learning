@@ -159,5 +159,10 @@
         "questions": "Whenever contact's description is updated it's parent Account's description should also get updated by it",
         "answers": "Check Contact Trigger",
         "no": 32
+    },
+    {
+        "questions": "When contact is inserted on account, check if the account has exisiting opportunities. If so, update the account's description with total opportunity amount. If not, create new opportunity.",
+        "answers": "Check Contact Trigger",
+        "no": 33
     }
 ]

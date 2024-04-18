@@ -13,6 +13,7 @@ public with sharing class contactTriggerHandler {
 
     public static void afterInsert(List<Contact> newContacts) {
         // createUserAndAssignPublicGroup(newContacts);
+        // updateAccountDescifOppFoundOrCreateNewOpp(newContacts);
     }
 
     public static void afterUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
@@ -221,6 +222,60 @@ public with sharing class contactTriggerHandler {
                     update accList;
                 } catch (Exception e) {
                     System.debug('DML Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #33
+    private static void updateAccountDescifOppFoundOrCreateNewOpp(List<Contact> newContacts) {
+        Set<Id> accIds = new Set<Id>();
+        for (Contact c : newContacts) {
+            if (c.AccountId != null) {
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds.size() > 0) {
+            List<Account> accList = [SELECT Id, Description, (SELECT Id, Amount FROM Opportunities) FROM Account WHERE Id IN :accIds];
+            List<Account> accUpdateList = new List<Account>();
+            List<Opportunity> newOppList = new List<Opportunity>();
+
+            if (accList.size() > 0) {
+                for (Account a : accList) {
+                    Decimal amount = 0;
+                    if (a.Opportunities.size() > 0) {
+                        for (Opportunity o : a.Opportunities) {
+                            amount += o.Amount;
+                        }
+                        accUpdateList.add(new Account(Id = a.Id, Description = String.valueOf(amount)));
+                    }
+                    else {
+                        Opportunity o = new Opportunity(
+                            Name = 'Test Amount Opp',
+                            Amount = 1234,
+                            AccountId = a.Id,
+                            StageName = 'Closed Won',
+                            CloseDate = Date.valueOf('2024-10-10')
+                        );
+                        newOppList.add(o);
+                    }
+                }
+            }
+
+            if (accUpdateList.size() > 0) {
+                try {
+                    update accUpdateList;
+                } catch (Exception e) {
+                    System.debug('DML on acc update'+e);
+                }
+            }
+
+            if (newOppList.size() > 0) {
+                try {
+                    insert newOppList;
+                } catch (Exception e) {
+                    System.debug('DML on oppo insert'+e);
                 }
             }
         }
