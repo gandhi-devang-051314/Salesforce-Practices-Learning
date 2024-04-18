@@ -16,6 +16,7 @@ public class accountTriggerHandler {
         //closeOpps(newAccs, oldAccs);
         // deleteOpportunitesDoNotContactInactiveAccount(newAccs, oldAccs);
         // closeLostAllOpportunites(newAccs, oldAccs);
+        // changeOwnerToRelatedConsAndOpps(newAccs, oldAccs);
     }
 
     //logic-functions
@@ -211,6 +212,45 @@ public class accountTriggerHandler {
                     if(nameToAccount.containsKey(a.Name)){
                         a.addError('Duplicate Name Found!');
                     }
+                }
+            }
+        }
+    }
+
+    //problem #33
+    private static void changeOwnerToRelatedConsAndOpps(List<Account> newAccs, Map<Id, Account> oldAccs) {
+        Map<Id, Id> accIdsToOwnerIds = new Map<Id, Id>();
+
+        for (Account ac : newAccs) {
+            if (oldAccs != null && oldAccs.get(ac.Id).OwnerId != ac.OwnerId && ac.OwnerId != null) {
+                accIdsToOwnerIds.put(ac.Id, ac.OwnerId);
+            }
+        }
+
+        if (accIdsToOwnerIds != null && accIdsToOwnerIds.size() > 0) {
+            List<Contact> conList = [SELECT Id, AccountId, OwnerId FROM Contact WHERE AccountId IN :accIdsToOwnerIds.keySet()];
+            List<Opportunity> oppList = [SELECT Id, AccountId, OwnerId FROM Opportunity WHERE AccountId IN :accIdsToOwnerIds.keySet()];
+            List<sObject> updatedRecords = new List<sObject>();
+
+            if (conList != null && conList.size() > 0) {
+                for (Contact c : conList) {
+                    c.OwnerId = accIdsToOwnerIds.get(c.AccountId);
+                    updatedRecords.add(c);
+                }
+            }
+
+            if (oppList != null && oppList.size() > 0) {
+                for (Opportunity o : oppList) {
+                    o.OwnerId = accIdsToOwnerIds.get(o.AccountId);
+                    updatedRecords.add(o);
+                }
+            }
+
+            if (updatedRecords != null && updatedRecords.size() > 0) {
+                try {
+                    update updatedRecords;
+                } catch (Exception e) {
+                    System.debug('Exception on update DML'+e);
                 }
             }
         }

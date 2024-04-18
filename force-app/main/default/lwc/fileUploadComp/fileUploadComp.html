@@ -1,8 +1,14 @@
 <template>
-    <lightning-file-upload label="Upload"
-                           name="fileUploader"
+    <lightning-file-upload name="fileUploader"
                            accept={acceptedFormats}
                            record-id={recordId}
-                           onuploadfinished={handleUploadFinished}>
+                           onuploadfinished={handleUploadFinished}
+                           multiple>
     </lightning-file-upload>
+    <template if:true={fileData}>
+        <template for:each={fileData} for:item="imgName" for:index="index">
+            {imgName.name}
+            <span key={imgName.name} data-id={imgName.documentId} onclick={removeReceiptImage} class="removeImage">x</span> &nbsp;
+        </template>
+    </template>
 </template>

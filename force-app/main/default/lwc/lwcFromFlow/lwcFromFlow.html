@@ -4,6 +4,8 @@
                 data={records}
                 columns={fieldColumns}
                 onuploadfinished={handleUploadFinished}
+                ondelsuccess={handleFileDelete}
+                ondelerror={handleFileDelete}
                 hide-checkbox-column>
         </c-custom-data-table>
 </template>

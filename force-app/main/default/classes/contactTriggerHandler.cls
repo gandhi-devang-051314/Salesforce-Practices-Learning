@@ -227,7 +227,62 @@ public with sharing class contactTriggerHandler {
         }
     }
 
-    //problem #33
+     //problem #33
+     private static void enforceSinglePrimaryContactOnAccount(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Contact c : newContacts) {
+            if (
+                (oldContacts == null && c.AccountId != null && c.Primary_Contact__c == true) ||
+                (oldContacts != null && c.AccountId != null && oldContacts.get(c.Id).Primary_Contact__c != c.Primary_Contact__c && c.Primary_Contact__c == true)
+            ){
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds != null && accIds.size() > 0) {
+            Map<Id, Account> accMap = new Map<Id, Account>([SELECT Id, (SELECT Id FROM Contacts WHERE Primary_Contact__c = true) FROM Account WHERE Id IN :accIds]);
+
+            if(accMap != null && accMap.size() > 0){
+                for (Contact c : newContacts) {
+                    if (accMap.containsKey(c.AccountId) && accMap.get(c.AccountId).Contacts.size() > 0){
+                        c.addError('Duplicate Primary Contact on Account!');
+                    }
+                }
+            }
+        }
+    }
+
+    //problem #34
+    private static void enforceAtleastOnePrimaryContact(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Contact c : newContacts) {
+            if (
+                (oldContacts == null && c.AccountId != null && !c.Primary_Contact__c) ||
+                (oldContacts != null && c.AccountId != null && oldContacts.get(c.Id).Primary_Contact__c != c.Primary_Contact__c && !c.Primary_Contact__c)
+            ){
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds != null && accIds.size() > 0) {
+            Map<Id, Account> accMap = new Map<Id, Account>([SELECT Id, (SELECT Id FROM Contacts WHERE Primary_Contact__c = true) FROM Account WHERE Id IN :accIds]);
+            
+            if (accMap != null && accMap.size() > 0) {
+                for (Contact c : newContacts) {
+                    if ( 
+                        (accMap.containsKey(c.AccountId) && Trigger.isUpdate && accMap.get(c.AccountId).Contacts.size() < 2) ||
+                        (accMap.containsKey(c.AccountId) && Trigger.isInsert && accMap.get(c.AccountId).Contacts.size() < 1)
+                    ) {
+                        c.addError('You need atleast one Contact as Primary Contact on Account!');
+                    }
+                }
+            }
+        }
+    }
+
+    //problem #36
     private static void updateAccountDescifOppFoundOrCreateNewOpp(List<Contact> newContacts) {
         Set<Id> accIds = new Set<Id>();
         for (Contact c : newContacts) {

@@ -161,8 +161,23 @@
         "no": 32
     },
     {
+        "questions": "When Account's owner is changed then related contacts and opportunity owner's must be changed in sync",
+        "answers": "Check Account Trigger",
+        "no": 33
+    },
+    {
+        "questions": "Enforce single primary contact on Account",
+        "answers": "Check Contact Trigger",
+        "no": 34
+    },
+    {
+        "questions": "If Contact is inserted / updated as non primary Contact, maintain atleast one Primary Contact on Account",
+        "answers": "Check Contact Trigger",
+        "no": 35
+    },
+    {
         "questions": "When contact is inserted on account, check if the account has exisiting opportunities. If so, update the account's description with total opportunity amount. If not, create new opportunity.",
         "answers": "Check Contact Trigger",
-        "no": 33
+        "no": 36
     }
 ]
