@@ -179,5 +179,15 @@
         "questions": "When contact is inserted on account, check if the account has exisiting opportunities. If so, update the account's description with total opportunity amount. If not, create new opportunity.",
         "answers": "Check Contact Trigger",
         "no": 36
+    },
+    {
+        "questions": "create contacts based on the number entered by the user in Number of contacts while creating an Account",
+        "answers": "Check Account Trigger",
+        "no": 37
+    },
+    {
+        "questions": "Linking of candidate and skill records. It should read skills listed in text area field on Candidate, match them with existing skills, and connect them using junction object called candidate skills. Also, if a skill doesn't exist then create the skill before establishing the connection",
+        "answers": "Check Candidate Trigger",
+        "no": 38
     }
 ]

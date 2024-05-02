@@ -9,6 +9,7 @@ public class accountTriggerHandler {
         //closeOpps(newAccs, null);
         // deleteOpportunitesDoNotContactInactiveAccount(newAccs, null);
         // createRelatedContactAndClientContact(newAccs);
+        // insertNumberOfContactsBasedOnValue(newAccs);
     }
 
     public static void afterUpdate(List<Account> newAccs, Map<Id, Account> oldAccs) {
@@ -251,6 +252,44 @@ public class accountTriggerHandler {
                     update updatedRecords;
                 } catch (Exception e) {
                     System.debug('Exception on update DML'+e);
+                }
+            }
+        }
+    }
+
+    //problem #37
+    private static void insertNumberOfContactsBasedOnValue(List<Account> newAccs) {
+        Map<Id, Decimal> accIdToNumberOfContacts = new Map<Id, Decimal>();
+
+        for (Account ac : newAccs) {
+            if(ac.Number_Of_Contacts__c > 10) {
+                ac.addError('Maximum 10 contacts can be entered on account while insertion!');
+            }
+            else if (ac.Number_Of_Contacts__c != null && ac.Number_Of_Contacts__c != 0) {
+                accIdToNumberOfContacts.put(ac.Id, ac.Number_Of_Contacts__c);
+            }
+        }
+
+        if (accIdToNumberOfContacts.size() > 0) {
+            List<Contact> conList = new List<Contact>();
+
+            for (Id acId : accIdToNumberOfContacts.keySet()) {
+                for (Integer i = 0; i < accIdToNumberOfContacts.get(acId); i++) {
+                    conList.add(
+                        new Contact(
+                            FirstName = 'Test',
+                            LastName = 'Contact'+i,
+                            AccountId = acId
+                        )
+                    );
+                }
+            }
+
+            if (conList.size() > 0) {
+                try {
+                    insert conList;
+                } catch (Exception e) {
+                    System.debug('insert DML Error'+e);
                 }
             }
         }
