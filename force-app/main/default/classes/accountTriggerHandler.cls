@@ -18,6 +18,7 @@ public class accountTriggerHandler {
         // deleteOpportunitesDoNotContactInactiveAccount(newAccs, oldAccs);
         // closeLostAllOpportunites(newAccs, oldAccs);
         // changeOwnerToRelatedConsAndOpps(newAccs, oldAccs);
+        // sendEmailToOwnerAboutModifiedContactsBetweenAccountLastUpdateAndCurrentUpdate(newAccs, oldAccs);
     }
 
     //logic-functions
@@ -290,6 +291,60 @@ public class accountTriggerHandler {
                     insert conList;
                 } catch (Exception e) {
                     System.debug('insert DML Error'+e);
+                }
+            }
+        }
+    }
+
+    //problem #39
+    private static void sendEmailToOwnerAboutModifiedContactsBetweenAccountLastUpdateAndCurrentUpdate(List<Account> newAccs, Map<Id, Account> oldAccs) {
+        Map<Id, List<DateTime>> accIdToUpdateDates = new Map<Id, List<DateTime>>();
+
+        for (Account ac : newAccs) {
+            if (ac.OwnerId != null) {
+                List<DateTime> dtList = new List<DateTime>();
+                dtList.add(oldAccs.get(ac.Id).LastModifiedDate);
+                dtList.add(ac.LastModifiedDate);
+                accIdToUpdateDates.put(ac.Id, dtList);
+            }
+        }
+
+        if (accIdToUpdateDates.size() > 0) {
+            List<Contact> conList = [SELECT Id, Name,  AccountId, Account.Name, Account.Owner.Email, LastModifiedDate FROM Contact WHERE AccountId IN :accIdToUpdateDates.keySet()];
+
+            if (conList.size() > 0) {
+                List<Messaging.SingleEmailMessage> emailNeedstoSendList = new List<Messaging.SingleEmailMessage>();
+                Map<String, String> emailToBodyMap = new Map<String, String>();
+                for (Contact con : conList) {
+                    List<DateTime> dtList = accIdToUpdateDates.get(con.AccountId);
+                    if (dtList[0] < con.LastModifiedDate && dtList[1] > con.LastModifiedDate) {
+                        if (emailToBodyMap.containsKey(con.Account.Owner.Email)) {
+                            String detail = emailToBodyMap.get(con.Account.Owner.Email);
+                            detail = detail+'\n'+'AccountName: '+con.Account.Name+'\t'+'ContactName: '+con.Name;
+                            emailToBodyMap.put(con.Account.Owner.Email, detail);
+                        }
+                        else{
+                            emailToBodyMap.put(con.Account.Owner.Email, 'AccountName: '+con.Account.Name+'\t'+'ContactName: '+con.Name);
+                        }
+                    }
+                }
+
+                if (emailToBodyMap.size() > 0) {
+                    for (String e : emailToBodyMap.keySet()) {
+                        Messaging.SingleEmailMessage ms = new Messaging.SingleEmailMessage();
+                        ms.setToAddresses(new List<String>{e});
+                        ms.setPlainTextBody(emailToBodyMap.get(e));
+                        ms.setSubject('About Contact Details those were updated from last Account Update');
+                        emailNeedstoSendList.add(ms);
+                    }
+                }
+
+                if (emailNeedstoSendList.size() > 0) {
+                    try {
+                        Messaging.sendEmail(emailNeedstoSendList);
+                    } catch (Exception e) {
+                        System.debug('Error while sending mails'+e);
+                    }
                 }
             }
         }

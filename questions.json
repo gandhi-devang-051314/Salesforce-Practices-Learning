@@ -189,5 +189,10 @@
         "questions": "Linking of candidate and skill records. It should read skills listed in text area field on Candidate, match them with existing skills, and connect them using junction object called candidate skills. Also, if a skill doesn't exist then create the skill before establishing the connection",
         "answers": "Check Candidate Trigger",
         "no": 38
+    },
+    {
+        "questions": "When the account gets updated, send an email to the Account's owner with the details of contact modified between the last update and current update of Account",
+        "answers": "Check Account Trigger",
+        "no": 39
     }
 ]
