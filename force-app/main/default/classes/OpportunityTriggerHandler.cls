@@ -1,5 +1,9 @@
 public class OpportunityTriggerHandler {
 
+    public static void beforeInsert(List<Opportunity> newOpps) {
+        // throwErrorIfOpportunityHasCreatedOnAccountOnSameDay(newOpps);
+    }
+
     public static void afterInsert(List<Opportunity> newOpps) {
         //createUpdateTasks(newOpps, null);
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
@@ -270,6 +274,40 @@ public class OpportunityTriggerHandler {
                     update accList;
                 } catch (Exception e) {
                     System.debug('DML Exception'+e);
+                }
+            }
+        }
+    }
+
+    //problem #40
+    private static void throwErrorIfOpportunityHasCreatedOnAccountOnSameDay(List<Opportunity> newOpps) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Opportunity op : newOpps) {
+            if (op.AccountId != null) {
+                accIds.add(op.AccountId);
+            }
+        }
+
+        if (accIds.size() > 0) {
+            List<Opportunity> oppList = [SELECT Id, AccountId, CreatedDate FROM Opportunity WHERE AccountId IN :accIds];
+            Map<Id, Date> accIdToCreatedDate = new Map<Id, Date>(); 
+
+            if (oppList.size() > 0) {
+                for (Opportunity op : oppList) {
+                    Date d = Date.newInstance(op.CreatedDate.year(), op.CreatedDate.month(), op.CreatedDate.day());
+                    accIdToCreatedDate.put(op.AccountId, d);
+                }
+            }
+
+            if (accIdToCreatedDate.size() > 0) {
+                for (Opportunity op : newOpps) {
+                    if (accIdToCreatedDate.containsKey(op.AccountId)) {
+                        Date exisitingOppDate = accIdToCreatedDate.get(op.AccountId);
+                        if (Date.today().isSameDay(exisitingOppDate)) {
+                            op.addError('Already Opportunity has been created on parent Account on same day :(');
+                        }
+                    }
                 }
             }
         }

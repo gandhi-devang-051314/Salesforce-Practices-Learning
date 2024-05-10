@@ -194,5 +194,10 @@
         "questions": "When the account gets updated, send an email to the Account's owner with the details of contact modified between the last update and current update of Account",
         "answers": "Check Account Trigger",
         "no": 39
+    },
+    {
+        "questions": "Whenever user creates the opportunity on Account and if that Account has already opportunity created on same day then it will thorw and error",
+        "answers":"Check Opportunity Trigger",
+        "no": 40
     }
 ]

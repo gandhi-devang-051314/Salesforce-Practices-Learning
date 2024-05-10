@@ -1,4 +1,4 @@
-trigger OpportunityTrigger on Opportunity (after insert, after update, after delete, after undelete) {
+trigger OpportunityTrigger on Opportunity (before insert, after insert, after update, after delete, after undelete) {
     switch on Trigger.operationType {
         when AFTER_INSERT {
             OpportunityTriggerHandler.afterInsert(Trigger.new);
@@ -11,6 +11,9 @@ trigger OpportunityTrigger on Opportunity (after insert, after update, after del
         }
         when AFTER_UNDELETE {
             OpportunityTriggerHandler.afterUndelete(Trigger.new);
+        }
+        when BEFORE_INSERT {
+            OpportunityTriggerHandler.beforeInsert(Trigger.new);
         }
     }
 }
