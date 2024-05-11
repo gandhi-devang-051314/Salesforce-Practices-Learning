@@ -199,5 +199,10 @@
         "questions": "Whenever user creates the opportunity on Account and if that Account has already opportunity created on same day then it will thorw and error",
         "answers":"Check Opportunity Trigger",
         "no": 40
+    },
+    {
+        "questions": "Trigger to calculate the highest time for which the order stayed in a particular stage -- new, in progress, approved, preparing, delivered, Closed",
+        "answers":"Check Order Trigger",
+        "no": 41
     }
 ]
