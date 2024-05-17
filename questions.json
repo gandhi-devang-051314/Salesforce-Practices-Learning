@@ -204,5 +204,15 @@
         "questions": "Trigger to calculate the highest time for which the order stayed in a particular stage -- new, in progress, approved, preparing, delivered, Closed",
         "answers":"Check Order Trigger",
         "no": 41
+    },
+    {
+        "questions": "Whenever an opportunity is created or updated with Amount greater than 10000 then send an email to the record owner",
+        "answers": "Check Opportunity Trigger",
+        "no": 42
+    },
+    {
+        "questions": "When ever opportunity stage is updated as closed/won The status/ any text field on most recently modified child record should be updated as approved And for remaining records field should be updated as rejected In case the opportunity stage is updated as closed/lost Most recent child record status should be updated as lost and remaining child records should be updated as rejected",
+        "answers":"Check Opportunity Trigger",
+        "no": 43
     }
 ]

@@ -9,6 +9,7 @@ public class OpportunityTriggerHandler {
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
         // sumOfAmountOnAccount(newOpps, null);
+        // sendEmailToOpportunityOwnerIfAmountIsGreater(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
@@ -17,6 +18,8 @@ public class OpportunityTriggerHandler {
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, oldOpps);
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, oldOpps);
         // sumOfAmountOnAccount(newOpps, oldOpps);
+        // sendEmailToOpportunityOwnerIfAmountIsGreater(newOpps, oldOpps);
+        // changeOppLineItemStatusBasedOnOppStatus(newOpps, oldOpps);
     }
 
     public static void afterDelete(Map<Id, Opportunity> oldOpps){
@@ -308,6 +311,92 @@ public class OpportunityTriggerHandler {
                             op.addError('Already Opportunity has been created on parent Account on same day :(');
                         }
                     }
+                }
+            }
+        }
+    }
+
+    //problem #42
+    private static void sendEmailToOpportunityOwnerIfAmountIsGreater(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
+        Set<Id> oppIds = new Set<Id>();
+        
+        for (Opportunity op : newOpps) {
+            if (op.Amount > 10000) {
+                oppIds.add(op.Id);
+            }
+        }
+
+        if (oppIds.size() > 0) {
+            List<Opportunity> oppList = [SELECT Id, Name, Amount, Owner.Email FROM Opportunity WHERE Id IN :oppIds];
+            Map<String, String> emailToBodyMap = new Map<String, String>();
+            List<Messaging.SingleEmailMessage> emailNeedsToBeSentList = new List<Messaging.SingleEmailMessage>();
+
+            for (Opportunity op : oppList) {
+                emailToBodyMap.put(
+                    op.Owner.Email,
+                    'Opportunity Name: '+op.Name+'\n'+'Amount: '+op.Amount
+                );
+            }
+
+            if (emailToBodyMap.size() > 0) {
+                for (String e : emailToBodyMap.keySet()) {
+                    Messaging.SingleEmailMessage ms = new Messaging.SingleEmailMessage();
+                    ms.setToAddresses(new List<String>{e});
+                    ms.setPlainTextBody(emailToBodyMap.get(e));
+                    ms.setSubject('About Opportunity Amount!');
+                    emailNeedsToBeSentList.add(ms);
+                }
+            }
+
+            if (emailNeedsToBeSentList.size() > 0) {
+                try {
+                    Messaging.sendEmail(emailNeedsToBeSentList);
+                } catch (Exception e) {
+                    System.debug('Error while sending email'+e);
+                }
+            }
+        }
+    }
+
+    //problem #43
+    private static void changeOppLineItemStatusBasedOnOppStatus(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
+        Set<Id> oppIds = new Set<Id>();
+
+        for (Opportunity op : newOpps) {
+            if (
+                (op.StageName == 'Closed Won' || op.StageName == 'Closed Lost') &&
+                (oldOpps.get(op.Id).StageName != op.StageName)
+            ) {
+                oppIds.add(op.Id);
+            }
+        }
+
+        if (oppIds.size() > 0) {
+            List<Opportunity> oppList = [SELECT Id, StageName, (SELECT Id, Description FROM OpportunityLineItems ORDER BY LastModifiedDate DESC) FROM Opportunity WHERE Id IN :oppIds];
+            List<OpportunityLineItem> oppLineItemList = new List<OpportunityLineItem>();
+
+            if (oppList.size() > 0) {
+                for (Opportunity op : oppList) {
+                    if (op.OpportunityLineItems.size() > 0) {
+                        for (Integer i = 0; i < op.OpportunityLineItems.size(); i++) {
+                            if (op.StageName == 'Closed Won') {
+                                op.OpportunityLineItems[i].Description = (i == 0) ? 'Approved' : 'Rejected';
+                                oppLineItemList.add(op.OpportunityLineItems[i]);
+                            }
+                            else if (op.StageName == 'Closed Lost') {
+                                op.OpportunityLineItems[i].Description = (i == 0) ? 'Lost' : 'Rejected';
+                                oppLineItemList.add(op.OpportunityLineItems[i]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (oppLineItemList.size() > 0) {
+                try {
+                    update oppLineItemList;
+                } catch (Exception e) {
+                    System.debug('Error while updatation!'+e);
                 }
             }
         }
