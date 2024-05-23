@@ -14,6 +14,7 @@ public with sharing class contactTriggerHandler {
     public static void afterInsert(List<Contact> newContacts) {
         // createUserAndAssignPublicGroup(newContacts);
         // updateAccountDescifOppFoundOrCreateNewOpp(newContacts);
+        // checkedNewContactAndUnchekecOnOldContacts(newContacts);
     }
 
     public static void afterUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
@@ -331,6 +332,45 @@ public with sharing class contactTriggerHandler {
                     insert newOppList;
                 } catch (Exception e) {
                     System.debug('DML on oppo insert'+e);
+                }
+            }
+        }
+    }
+
+    //problem #44
+    private static void checkedNewContactAndUnchekecOnOldContacts(List<Contact> newContacts) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Contact c : newContacts) {
+            if (c.AccountId != null) {
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds.size() > 0) {
+            List<Contact> conList = [SELECT Id, New_Contact__c, AccountId FROM Contact WHERE AccountId IN :accIds ORDER BY CreatedDate DESC];
+            Set<Id> accIdsHavingLatestContact = new Set<Id>();
+            List<Contact> conListNeedsUpdate = new List<Contact>();
+
+            if (conList.size() > 0) {
+                for (Contact c : conList) {
+                    if (!accIdsHavingLatestContact.contains(c.AccountId)) {
+                        accIdsHavingLatestContact.add(c.AccountId);
+                        c.New_Contact__c = true;
+                        conListNeedsUpdate.add(c);
+                    }
+                    else{
+                        c.New_Contact__c = false;
+                        conListNeedsUpdate.add(c);
+                    }
+                }
+            }
+
+            if (conListNeedsUpdate.size() > 0) {
+                try {
+                    update conListNeedsUpdate;
+                } catch (Exception e) {
+                    System.debug('Exception occuring on updation'+e);
                 }
             }
         }

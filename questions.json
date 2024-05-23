@@ -214,5 +214,10 @@
         "questions": "When ever opportunity stage is updated as closed/won The status/ any text field on most recently modified child record should be updated as approved And for remaining records field should be updated as rejected In case the opportunity stage is updated as closed/lost Most recent child record status should be updated as lost and remaining child records should be updated as rejected",
         "answers":"Check Opportunity Trigger",
         "no": 43
+    },
+    {
+        "questions": "Identify the most recent contact inserted for each account and mark its New_Contact__c field as checked while ensuring that New_Contact__c field is unchecked for all other contacts related to the same account",
+        "answers":"Check Contact Trigger",
+        "no": 44
     }
 ]
