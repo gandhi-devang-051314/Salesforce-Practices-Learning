@@ -219,5 +219,10 @@
         "questions": "Identify the most recent contact inserted for each account and mark its New_Contact__c field as checked while ensuring that New_Contact__c field is unchecked for all other contacts related to the same account",
         "answers":"Check Contact Trigger",
         "no": 44
+    },
+    {
+        "questions": "When case is created and has an email in SuppiledEmail field check if the same email is present in the email field of any contact. If it is then link that case to contact else created new contact and then link it to the case",
+        "answers":"Check Case Trigger",
+        "no": 45
     }
 ]

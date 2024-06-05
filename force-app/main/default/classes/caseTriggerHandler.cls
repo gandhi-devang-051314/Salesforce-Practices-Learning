@@ -14,6 +14,7 @@ public class caseTriggerHandler {
         //updateAccountRatingBasedOnClosedCases(newCases, null);
         //countCaseStatusOnAccount(newCases, null);
         // latestCaseNumberOnAccount(newCases);
+        // linkCaseWithContactIfSameEmailOrCreateNewContactWithSameEmailAndLinkTheCase(newCases);
     }
 
     public static void afterUpdate(List<Case> newCases, Map<Id, Case> oldCases){
@@ -379,6 +380,72 @@ public class caseTriggerHandler {
                     update accMap.values();
                 } catch (Exception e) {
                     System.debug('Exception on DML'+e);
+                }
+            }
+        }
+    }
+
+    //problem #45
+    private static void linkCaseWithContactIfSameEmailOrCreateNewContactWithSameEmailAndLinkTheCase(List<Case> newCases) {
+        Map<String, Id> emailToIdCaseMap = new Map<String, Id>();
+
+        for (Case c : newCases) {
+            if (c.SuppliedEmail != null && c.SuppliedEmail != '') {
+                emailToIdCaseMap.put(c.SuppliedEmail, c.Id);
+            }
+        }
+
+        if (emailToIdCaseMap.size() > 0) {
+            List<Contact> conList = [SELECT Id, Email FROM Contact WHERE Email IN :emailToIdCaseMap.keySet()];
+            Map<String, Id> emailToIdContactMap = new Map<String, Id>();
+            List<Case> caseNeedsToUpsert = new List<Case>();
+            Map<String, Contact> contactNeedsInsertMap = new Map<String, Contact>();
+
+            if (conList.size() > 0) {
+                for (Contact c : conList) {
+                    emailToIdContactMap.put(c.Email, c.Id);
+                }
+            }
+
+            for (String e : emailToIdCaseMap.keySet()) {
+                if (emailToIdContactMap.containsKey(e)) {
+                    Case c = new Case(
+                        Id = emailToIdCaseMap.get(e),
+                        ContactId = emailToIdContactMap.get(e)
+                    );
+                    caseNeedsToUpsert.add(c);
+                }
+                else {
+                    Contact c = new Contact(
+                        FirstName = 'Test',
+                        LastName = 'Contact',
+                        Email = e
+                    );
+                    contactNeedsInsertMap.put(e, c);
+                }
+            }
+
+            if (contactNeedsInsertMap.size() > 0) {
+                try {
+                    insert contactNeedsInsertMap.values();
+                } catch (Exception e) {
+                    System.debug('Exception occured while insertion of new contact =>' +e.getMessage());
+                }
+            }
+
+            for (String e : contactNeedsInsertMap.keySet()) {
+                Case c = new Case(
+                    Id = emailToIdCaseMap.get(e),
+                    ContactId = contactNeedsInsertMap.get(e).Id
+                );
+                caseNeedsToUpsert.add(c);
+            }
+
+            if (caseNeedsToUpsert.size() > 0) {
+                try {
+                    upsert caseNeedsToUpsert;
+                } catch (Exception e) {
+                    System.debug('Exception occured while upsertion of cases =>' +e.getMessage());
                 }
             }
         }
