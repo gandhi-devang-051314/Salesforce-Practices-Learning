@@ -224,5 +224,10 @@
         "questions": "When case is created and has an email in SuppiledEmail field check if the same email is present in the email field of any contact. If it is then link that case to contact else created new contact and then link it to the case",
         "answers":"Check Case Trigger",
         "no": 45
+    },
+    {
+        "questions": "When contact is inserted, deleted or updated then all related contact names and created date will be populated in the Parent Account description. Also on update or delete of the parent on related contact, the exisiting contact record will be updated or removed from the description",
+        "answers": "Check Contact Trigger",
+        "no": 46
     }
 ]

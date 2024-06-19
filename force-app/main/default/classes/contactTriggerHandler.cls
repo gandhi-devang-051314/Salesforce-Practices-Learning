@@ -15,10 +15,15 @@ public with sharing class contactTriggerHandler {
         // createUserAndAssignPublicGroup(newContacts);
         // updateAccountDescifOppFoundOrCreateNewOpp(newContacts);
         // checkedNewContactAndUnchekecOnOldContacts(newContacts);
+        updateAccountDescriptionWithContactInfo(newContacts, null);
     }
 
     public static void afterUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
-        
+        updateAccountDescriptionWithContactInfo(newContacts, oldContacts);
+    }
+
+    public static void afterDelete(Map<Id, Contact> oldContacts) {
+        updateAccountDescriptionWithContactInfo(null, oldContacts);
     }
 
 
@@ -371,6 +376,69 @@ public with sharing class contactTriggerHandler {
                     update conListNeedsUpdate;
                 } catch (Exception e) {
                     System.debug('Exception occuring on updation'+e);
+                }
+            }
+        }
+    }
+
+    //problem #46
+    private static void updateAccountDescriptionWithContactInfo(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
+        Set<Id> accIds = new Set<Id>();
+        
+        if (newContacts != null) {
+            for (Contact c : newContacts) {
+                if (c.AccountId != null) {
+                    accIds.add(c.AccountId);
+                }
+                if (oldContacts.get(c.Id).AccountId != null && c.AccountId != oldContacts.get(c.Id).AccountId) { // for the update we need to remove contact from old Parent Account and add to new Parent Account
+                    accIds.add(oldContacts.get(c.Id).AccountId);
+                }
+            }
+        }
+        else if (newContacts == null) { //delete case
+            for (Contact c : oldContacts.values()) {
+                if (c.AccountId != null) {
+                    accIds.add(c.AccountId);
+                }
+            }
+        }
+
+        if (accIds.size() > 0) {
+            List<Contact> conList = [SELECT Name, CreatedDate, AccountId FROM Contact WHERE AccountId IN :accIds];
+            Map<Id, Account> updateAccMap = new Map<Id, Account>();
+
+            for (Contact c : conList) {
+                if (updateAccMap.containsKey(c.AccountId)) {
+                    Account a = updateAccMap.get(c.AccountId);
+
+                    List<Object> ca = (List<Object>)JSON.deserializeUntyped(a.Description);
+                    Map<String, Object> m = new Map<String, Object>();
+                    m.put('contactName', c.Name);
+                    m.put('createdDate', c.CreatedDate);
+                    ca.add(m);
+
+                    a.Description = JSON.serialize(ca);
+                    updateAccMap.put(c.AccountId, a);
+                }
+                else {
+                    Account a = new Account(Id = c.AccountId);
+
+                    List<Object> ca = new List<Object>();
+                    Map<String, Object> m = new Map<String, Object>();
+                    m.put('contactName', c.Name);
+                    m.put('createdDate', c.CreatedDate);
+                    ca.add(m);
+
+                    a.Description = JSON.serialize(ca);
+                    updateAccMap.put(c.AccountId, a);
+                }
+            }
+
+            if (updateAccMap.size() > 0) {
+                try {
+                    update updateAccMap.values();
+                } catch (Exception e) {
+                    System.debug('DML Exception while updating Accounts ==> '+e.getMessage());
                 }
             }
         }
