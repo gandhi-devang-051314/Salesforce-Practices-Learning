@@ -10,6 +10,7 @@ public class OpportunityTriggerHandler {
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
         // sumOfAmountOnAccount(newOpps, null);
         // sendEmailToOpportunityOwnerIfAmountIsGreater(newOpps, null);
+        // secondHighestAmountOnAccountDesc(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
@@ -20,18 +21,21 @@ public class OpportunityTriggerHandler {
         // sumOfAmountOnAccount(newOpps, oldOpps);
         // sendEmailToOpportunityOwnerIfAmountIsGreater(newOpps, oldOpps);
         // changeOppLineItemStatusBasedOnOppStatus(newOpps, oldOpps);
+        // secondHighestAmountOnAccountDesc(newOpps, oldOpps);
     }
 
     public static void afterDelete(Map<Id, Opportunity> oldOpps){
         // maxAmountOfClosedOpportunityWithoutAggrgate(null, oldOpps);
         // updateAccountDescriptionToMaxOpprtunityName(null, oldOpps);
         // sumOfAmountOnAccount(null, oldOpps);
+        // secondHighestAmountOnAccountDesc(null, oldOpps);
     }
 
     public static void afterUndelete(List<Opportunity> newOpps){
         // maxAmountOfClosedOpportunityWithoutAggrgate(newOpps, null);
         // updateAccountDescriptionToMaxOpprtunityName(newOpps, null);
         // sumOfAmountOnAccount(newOpps, null);
+        // secondHighestAmountOnAccountDesc(newOpps, null);
     }
 
     //logic-functions
@@ -397,6 +401,62 @@ public class OpportunityTriggerHandler {
                     update oppLineItemList;
                 } catch (Exception e) {
                     System.debug('Error while updatation!'+e);
+                }
+            }
+        }
+    }
+
+    //problem #47
+    private static void secondHighestAmountOnAccountDesc(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
+        Set<Id> accIds = new Set<Id>();
+        
+        if (newOpps != null) {
+            for (Opportunity o : newOpps) {
+                if (o.AccountId != null) {
+                    accIds.add(o.AccountId);
+                }
+            }
+        }
+        else if (newOpps == null) { //delete case
+            for (Opportunity o : oldOpps.values()) {
+                if (o.AccountId != null) {
+                    accIds.add(o.AccountId);
+                }
+            }
+        }
+
+        if (accIds.size() > 0) {
+            List<Account> accList = [SELECT Id, (SELECT Id, Amount FROM Opportunities ORDER BY Amount DESC LIMIT 2) FROM Account WHERE Id IN :accIds];
+            Map<Id, String> accIdToAmountMap = new Map<Id, String>();
+            List<Account> accUpdateList = new List<Account>();
+
+            if (accList.size() > 0) {
+                for (Account a : accList) {
+                    if (a.Opportunities.size() == 2) { //limit 2 so works good
+                        accIdToAmountMap.put(a.Id, String.valueOf(a.Opportunities[1].Amount));
+                    }
+                    else if (a.Opportunities.size() == 1) { //if account only has 1 opp
+                        accIdToAmountMap.put(a.Id, String.valueOf(a.Opportunities[0].Amount));
+                    }
+                }
+            }
+
+            if (accIdToAmountMap.size() > 0) {
+                for (Id i : accIdToAmountMap.keySet()) {
+                    accUpdateList.add(
+                        new Account(
+                            Id = i,
+                            Description = 'Second Highest Amount of Opportunities on this Account -----> '+accIdToAmountMap.get(i)
+                        )
+                    );
+                }
+            }
+
+            if (accUpdateList.size() > 0) {
+                try {
+                    update accUpdateList;
+                } catch (Exception e) {
+                    System.debug('Exception while updating the accounts ==> '+e.getMessage());
                 }
             }
         }

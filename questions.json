@@ -229,5 +229,10 @@
         "questions": "When contact is inserted, deleted or updated then all related contact names and created date will be populated in the Parent Account description. Also on update or delete of the parent on related contact, the exisiting contact record will be updated or removed from the description",
         "answers": "Check Contact Trigger",
         "no": 46
+    },
+    {
+        "questions": "Update the Parent Account's Description Field with the Second Highest Amount from related opportunities",
+        "answers":"Check Opportunity Trigger",
+        "no": 47
     }
 ]

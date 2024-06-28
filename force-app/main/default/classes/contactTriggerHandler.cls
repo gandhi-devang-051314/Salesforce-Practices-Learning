@@ -15,15 +15,15 @@ public with sharing class contactTriggerHandler {
         // createUserAndAssignPublicGroup(newContacts);
         // updateAccountDescifOppFoundOrCreateNewOpp(newContacts);
         // checkedNewContactAndUnchekecOnOldContacts(newContacts);
-        updateAccountDescriptionWithContactInfo(newContacts, null);
+        // updateAccountDescriptionWithContactInfo(newContacts, null);
     }
 
     public static void afterUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
-        updateAccountDescriptionWithContactInfo(newContacts, oldContacts);
+        // updateAccountDescriptionWithContactInfo(newContacts, oldContacts);
     }
 
     public static void afterDelete(Map<Id, Contact> oldContacts) {
-        updateAccountDescriptionWithContactInfo(null, oldContacts);
+        // updateAccountDescriptionWithContactInfo(null, oldContacts);
     }
 
 
