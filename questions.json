@@ -234,5 +234,10 @@
         "questions": "Update the Parent Account's Description Field with the Second Highest Amount from related opportunities",
         "answers":"Check Opportunity Trigger",
         "no": 47
+    },
+    {
+        "questions": "Updates the parent account phone and all related contact's phone whenever the contact phone field is updated",
+        "answers":"Check Contact Trigger",
+        "no": 48
     }
 ]

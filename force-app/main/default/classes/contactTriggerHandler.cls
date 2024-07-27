@@ -20,6 +20,7 @@ public with sharing class contactTriggerHandler {
 
     public static void afterUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
         // updateAccountDescriptionWithContactInfo(newContacts, oldContacts);
+        // updatePhoneOnAccountAndAllRelatedContacts(newContacts, oldContacts);
     }
 
     public static void afterDelete(Map<Id, Contact> oldContacts) {
@@ -439,6 +440,48 @@ public with sharing class contactTriggerHandler {
                     update updateAccMap.values();
                 } catch (Exception e) {
                     System.debug('DML Exception while updating Accounts ==> '+e.getMessage());
+                }
+            }
+        }
+    }
+
+    //problem #48
+    private static void updatePhoneOnAccountAndAllRelatedContacts(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
+        Map<Id, String> phoneToIdMap = new Map<Id, String>();
+
+        for (Contact c : newContacts) {
+            if (c.Phone != null && c.Phone != oldContacts.get(c.Id).Phone && c.AccountId != null) {
+                phoneToIdMap.put(c.AccountId, c.Phone);
+            }
+        }
+
+        if (phoneToIdMap.size() > 0) {
+            List<Contact> conList = [SELECT Id, AccountId, Phone FROM Contact WHERE AccountId IN :phoneToIdMap.keySet()];
+            List<SObject> updateList = new List<SObject>();
+            Map<Id, Account> accMap = new Map<Id, Account>(); //we take map because if we directly insert acc in above list it gives duplicate Ids found error!
+
+            for (Contact c : conList) {
+                c.Phone = phoneToIdMap.get(c.AccountId);
+                updateList.add(c);
+
+                accMap.put(
+                    c.AccountId, 
+                    new Account(
+                        Id = c.AccountId,
+                        Phone = phoneToIdMap.get(c.AccountId)
+                    )
+                );
+            }
+
+            if (accMap.size() > 0) {
+                updateList.addAll(accMap.values());
+            }
+
+            if (updateList.size() > 0) {
+                try {
+                    update updateList;
+                } catch (Exception e) {
+                    System.debug('Exception occured in updating list --> '+e.getMessage());
                 }
             }
         }
