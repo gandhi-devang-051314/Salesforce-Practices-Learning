@@ -26,6 +26,7 @@ public class caseTriggerHandler {
 
     public static void afterDelete(Map<Id, Case> oldCases){
         //countCaseStatusOnAccount(null, oldCases);
+        createTaskAndSendEmailToAccountOwner(oldCases);
     }
 
     public static void afterUndelete(List<Case> newCases){
@@ -446,6 +447,56 @@ public class caseTriggerHandler {
                     upsert caseNeedsToUpsert;
                 } catch (Exception e) {
                     System.debug('Exception occured while upsertion of cases =>' +e.getMessage());
+                }
+            }
+        }
+    }
+
+    //problem #49
+    private static void createTaskAndSendEmailToAccountOwner(Map<Id, Case> oldCases) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Case c : oldCases.values()) {
+            if (c.AccountId != null) {
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds.size() > 0) {
+            List<Account> accList = [SELECT Id, Owner.Email, Owner.Name FROM Account WHERE Id IN :accIds];
+            List<Task> taskList = new List<Task>();
+            List<Messaging.SingleEmailMessage> emailList = new List<Messaging.SingleEmailMessage>();
+
+            for (Account a : accList) {
+                taskList.add(
+                    new Task(
+                        Subject = 'Followup Task while deleting Case on Account',
+                        Status = 'In Progress',
+                        // WhoId = con.Id,
+                        WhatId = a.Id
+                    )
+                );
+
+                Messaging.SingleEmailMessage ms = new Messaging.SingleEmailMessage();
+                ms.setToAddresses(new List<String>{a.Owner.Email});
+                ms.setPlainTextBody(a.Owner.Name);
+                ms.setSubject('Case is deleted from these Account and Task is being created in respect of this!');
+                emailList.add(ms);
+            }
+
+            if (taskList.size() > 0) {
+                try {
+                    insert taskList;
+                } catch (Exception e) {
+                    System.debug('Exception occured while inserting the task --> '+e.getMessage());
+                }
+            }
+
+            if (emailList.size() > 0) {
+                try {
+                    Messaging.sendEmail(emailList);
+                } catch (Exception e) {
+                    System.debug('Error while sending mails'+e);
                 }
             }
         }

@@ -239,5 +239,10 @@
         "questions": "Updates the parent account phone and all related contact's phone whenever the contact phone field is updated",
         "answers":"Check Contact Trigger",
         "no": 48
+    },
+    {
+        "questions": "Whenever case is deleted from an Account, it creates the task on Account and send email to Account's owner",
+        "answers":"Check Case Trigger",
+        "no": 49
     }
 ]
