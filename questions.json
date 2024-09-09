@@ -244,5 +244,10 @@
         "questions": "Whenever case is deleted from an Account, it creates the task on Account and send email to Account's owner",
         "answers":"Check Case Trigger",
         "no": 49
+    },
+    {
+        "questions": "Calculate how much time a particular order has spent on a particular stage through out the order journey",
+        "answers": "Check Order Trigger",
+        "no": 50
     }
 ]
