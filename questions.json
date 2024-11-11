@@ -249,5 +249,15 @@
         "questions": "Calculate how much time a particular order has spent on a particular stage through out the order journey",
         "answers": "Check Order Trigger",
         "no": 50
+    },
+    {
+        "questions": "Manage Account sharing with secondary owner, it should grant access to secondary owner when account is created and updated and remove the access for old owner",
+        "answers": "Check Account Trigger",
+        "no": 51
+    },
+    {
+        "questions": "When Opporunity moves to Closed Won stage, automatically share related Deal review records with the opportunity owner's manager",
+        "answers":"Check Opportunity Trigger",
+        "no": 52
     }
 ]

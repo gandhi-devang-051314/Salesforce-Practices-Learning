@@ -10,6 +10,7 @@ public class accountTriggerHandler {
         // deleteOpportunitesDoNotContactInactiveAccount(newAccs, null);
         // createRelatedContactAndClientContact(newAccs);
         // insertNumberOfContactsBasedOnValue(newAccs);
+        // grantOrRemoveAccessToSecondaryOwner(newAccs, null);
     }
 
     public static void afterUpdate(List<Account> newAccs, Map<Id, Account> oldAccs) {
@@ -19,6 +20,7 @@ public class accountTriggerHandler {
         // closeLostAllOpportunites(newAccs, oldAccs);
         // changeOwnerToRelatedConsAndOpps(newAccs, oldAccs);
         // sendEmailToOwnerAboutModifiedContactsBetweenAccountLastUpdateAndCurrentUpdate(newAccs, oldAccs);
+        // grantOrRemoveAccessToSecondaryOwner(newAccs, oldAccs);
     }
 
     //logic-functions
@@ -346,6 +348,53 @@ public class accountTriggerHandler {
                         System.debug('Error while sending mails'+e);
                     }
                 }
+            }
+        }
+    }
+
+    //problem #51
+    private static void grantOrRemoveAccessToSecondaryOwner(List<Account> newAccs, Map<Id, Account> oldAccs) {
+        Map<Id, Id> newOwnerToAccountIdMap = new Map<Id, Id>();
+        Map<Id, Id> oldOwnerToAccountIdMap = new Map<Id, Id>();
+
+        for (Account ac : newAccs) {
+            if (oldAccs == null && ac.Secondary_Owner__c != null) {
+                newOwnerToAccountIdMap.put(ac.Secondary_Owner__c, ac.Id);
+            }
+            else if (oldAccs != null && ac.Secondary_Owner__c != oldAccs.get(ac.Id).Secondary_Owner__c && ac.Secondary_Owner__c != null) {
+                newOwnerToAccountIdMap.put(ac.Secondary_Owner__c, ac.Id);
+                if (oldAccs.get(ac.Id).Secondary_Owner__c != null) {
+                    oldOwnerToAccountIdMap.put(oldAccs.get(ac.Id).Secondary_Owner__c, ac.Id);
+                }
+            }
+        }
+
+        if (oldOwnerToAccountIdMap.size() > 0) {
+            List<AccountShare> oldAccShareList = [SELECT Id FROM AccountShare WHERE UserOrGroupId IN :oldOwnerToAccountIdMap.keySet() AND AccountId IN :oldOwnerToAccountIdMap.values()];
+
+            if (oldAccShareList.size() > 0) {
+                delete oldAccShareList;
+            }
+        }
+
+        if (newOwnerToAccountIdMap.size() > 0) {
+            List<AccountShare> newAccShareList = new List<AccountShare>();
+
+            for (Id i : newOwnerToAccountIdMap.keySet()) {
+                newAccShareList.add(
+                    new AccountShare(
+                        AccountId = newOwnerToAccountIdMap.get(i),
+                        UserOrGroupId = i,
+                        // RowCause = 'Manual',
+                        AccountAccessLevel = 'Read',
+                        OpportunityAccessLevel = 'None',
+                        CaseAccessLevel = 'None'
+                    )
+                );
+            }
+
+            if (newAccShareList.size() > 0) {
+                insert newAccShareList;
             }
         }
     }

@@ -11,6 +11,7 @@ public class OpportunityTriggerHandler {
         // sumOfAmountOnAccount(newOpps, null);
         // sendEmailToOpportunityOwnerIfAmountIsGreater(newOpps, null);
         // secondHighestAmountOnAccountDesc(newOpps, null);
+        // shareDealReviewWithOwnerManager(newOpps, null);
     }
 
     public static void afterUpdate(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
@@ -22,6 +23,7 @@ public class OpportunityTriggerHandler {
         // sendEmailToOpportunityOwnerIfAmountIsGreater(newOpps, oldOpps);
         // changeOppLineItemStatusBasedOnOppStatus(newOpps, oldOpps);
         // secondHighestAmountOnAccountDesc(newOpps, oldOpps);
+        // shareDealReviewWithOwnerManager(newOpps, oldOpps);
     }
 
     public static void afterDelete(Map<Id, Opportunity> oldOpps){
@@ -458,6 +460,36 @@ public class OpportunityTriggerHandler {
                 } catch (Exception e) {
                     System.debug('Exception while updating the accounts ==> '+e.getMessage());
                 }
+            }
+        }
+    }
+
+    //problem #52
+    private static void shareDealReviewWithOwnerManager(List<Opportunity> newOpps, Map<Id, Opportunity> oldOpps) {
+        Set<Id> oppIds = new Set<Id>();
+
+        for (Opportunity op : newOpps) {
+            if (op.Deal_Review__c != null && op.StageName == 'Closed Won') {
+                oppIds.add(op.Id);
+            }
+        }
+
+        if (oppIds.size() > 0) {
+            List<Opportunity> oppList = [SELECT Id, Deal_Review__c, Owner.ManagerId FROM Opportunity WHERE Id IN :oppIds];
+            List<Deal_Review__Share> dealReviewShareList = new List<Deal_Review__Share>();
+
+            for (Opportunity op : oppList) {
+                dealReviewShareList.add(
+                    new Deal_Review__Share(
+                        ParentId = op.Deal_Review__c,
+                        UserOrGroupId = op.Owner.ManagerId,
+                        AccessLevel = 'Read'
+                    )
+                );
+            }
+
+            if (dealReviewShareList.size() > 0) {
+                insert dealReviewShareList;
             }
         }
     }
