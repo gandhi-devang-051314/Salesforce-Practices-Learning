@@ -259,5 +259,10 @@
         "questions": "When Opporunity moves to Closed Won stage, automatically share related Deal review records with the opportunity owner's manager",
         "answers":"Check Opportunity Trigger",
         "no": 52
+    },
+    {
+        "questions": "Automate Patient Bed allocation Based on Priority, if bed is not avaliable then create waiting list for patient",
+        "answers": "Check Patient Trigger",
+        "no": 53
     }
 ]
