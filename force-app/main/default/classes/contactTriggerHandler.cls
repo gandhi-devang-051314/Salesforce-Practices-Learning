@@ -16,11 +16,13 @@ public with sharing class contactTriggerHandler {
         // updateAccountDescifOppFoundOrCreateNewOpp(newContacts);
         // checkedNewContactAndUnchekecOnOldContacts(newContacts);
         // updateAccountDescriptionWithContactInfo(newContacts, null);
+        // createCaseOnAccount(newContacts);
     }
 
     public static void afterUpdate(List<Contact> newContacts, Map<Id, Contact> oldContacts) {
         // updateAccountDescriptionWithContactInfo(newContacts, oldContacts);
         // updatePhoneOnAccountAndAllRelatedContacts(newContacts, oldContacts);
+        // createCaseOnAccount(newContacts);
     }
 
     public static void afterDelete(Map<Id, Contact> oldContacts) {
@@ -483,6 +485,39 @@ public with sharing class contactTriggerHandler {
                 } catch (Exception e) {
                     System.debug('Exception occured in updating list --> '+e.getMessage());
                 }
+            }
+        }
+    }
+
+    //problem #54
+    private static void createCaseOnAccount(List<Contact> newContacts) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Contact c : newContacts) {
+            if (c.AccountId != null) {
+                accIds.add(c.AccountId);
+            }
+        }
+
+        if (accIds.size() > 0) {
+            Map<Id, Account> accMap = new Map<Id, Account>([SELECT Id, OwnerId FROM Account WHERE Id IN :accIds AND Type = 'Premium']);
+            List<Case> caseList = new List<Case>();
+
+            for (Contact c : newContacts) {
+                if (accMap.containsKey(c.AccountId)) {
+                    caseList.add(
+                        new Case(
+                            Subject = 'New Case on Contact',
+                            Description = 'Contact FirstName ==> '+c.FirstName+', Contact LastName ==> '+c.LastName,
+                            AccountId = c.AccountId,
+                            OwnerId = accMap.get(c.AccountId).OwnerId
+                        )
+                    );
+                }
+            }
+
+            if (caseList.size() > 0) {
+                insert caseList;
             }
         }
     }

@@ -264,5 +264,10 @@
         "questions": "Automate Patient Bed allocation Based on Priority, if bed is not avaliable then create waiting list for patient",
         "answers": "Check Patient Trigger",
         "no": 53
+    },
+    {
+        "questions": "Whenever new contact is added to an account with the type set to premium, A case should be created on account, Include the conatct's name in description field and be assigned to account's owner",
+        "answers":"Check Contact Trigger",
+        "no": 54
     }
 ]
