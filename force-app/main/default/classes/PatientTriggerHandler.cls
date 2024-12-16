@@ -15,7 +15,7 @@ public class PatientTriggerHandler {
         Map<String, List<Id>> patientStatusMap = new Map<String, List<Id>>();
 
         for (Patient__c p : patientList) {
-            if (p.Priority__c != null && p.Admission_Status__c != null && p.Admission_Status__c != 'In Treatment') {
+            if (p.Priority__c != null && p.Admission_Status__c != null && p.Admission_Status__c != 'In Treatment' && p.Admission_Status__c != 'Admitted') {
                 if (!patientStatusMap.containsKey(p.Priority__c)) {
                     patientStatusMap.put(p.Priority__c, new List<Id>());
                 }

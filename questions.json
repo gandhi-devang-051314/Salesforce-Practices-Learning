@@ -269,5 +269,10 @@
         "questions": "Whenever new contact is added to an account with the type set to premium, A case should be created on account, Include the conatct's name in description field and be assigned to account's owner",
         "answers":"Check Contact Trigger",
         "no": 54
+    },
+    {
+        "questions": "Assign avaliable beds to waiting patients based on priority (assign bed to patient <=> update patient status to admitted <=> delete waiting list <=> update bed status to occupied)",
+        "answers": "Check Bed Trigger",
+        "no": 55
     }
 ]
