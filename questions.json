@@ -274,5 +274,15 @@
         "questions": "Assign avaliable beds to waiting patients based on priority (assign bed to patient <=> update patient status to admitted <=> delete waiting list <=> update bed status to occupied)",
         "answers": "Check Bed Trigger",
         "no": 55
+    },
+    {
+        "questions": "Prevent the deletion of related contacts whenever parent account is deleted",
+        "answers": "Check Account Trigger",
+        "no": 56
+    },
+    {
+        "questions": "Update the capacity of an event based on its distribution and set the status of the event distribution to waiting if the capacity is insufficient",
+        "answers": "Check Event Distribution Trigger",
+        "no": 57
     }
 ]

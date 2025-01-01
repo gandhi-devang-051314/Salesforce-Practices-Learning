@@ -23,6 +23,10 @@ public class accountTriggerHandler {
         // grantOrRemoveAccessToSecondaryOwner(newAccs, oldAccs);
     }
 
+    public static void beforeDelete(List<Account> newAccs) {
+        // preventContactsToBeDeletedOfAccount(newAccs);
+    }
+
     //logic-functions
 
     //problem #3
@@ -395,6 +399,23 @@ public class accountTriggerHandler {
 
             if (newAccShareList.size() > 0) {
                 insert newAccShareList;
+            }
+        }
+    }
+
+    //problem #56
+    private static void preventContactsToBeDeletedOfAccount(List<Account> newAccs) {
+        Map<Id, Account> accMap = new Map<Id, Account>(newAccs);
+
+        if (accMap.size() > 0) {
+            List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE AccountId IN :accMap.keySet()];
+            
+            if (conList.size() > 0) {
+                for (Contact c : conList) {
+                    c.AccountId = null;
+                }
+
+                update conList;
             }
         }
     }
