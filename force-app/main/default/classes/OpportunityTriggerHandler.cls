@@ -2,6 +2,7 @@ public class OpportunityTriggerHandler {
 
     public static void beforeInsert(List<Opportunity> newOpps) {
         // throwErrorIfOpportunityHasCreatedOnAccountOnSameDay(newOpps);
+        // preventOpporunityCreationOnSameAccountWithInDayOrSingleTrans(newOpps);
     }
 
     public static void afterInsert(List<Opportunity> newOpps) {
@@ -490,6 +491,39 @@ public class OpportunityTriggerHandler {
 
             if (dealReviewShareList.size() > 0) {
                 insert dealReviewShareList;
+            }
+        }
+    }
+
+    //problem #58
+    private static void preventOpporunityCreationOnSameAccountWithInDayOrSingleTrans(List<Opportunity> newOpps) {
+        Map<Id, List<Opportunity>> accIdToOppMapForSingleT = new Map<Id, List<Opportunity>>();
+        Set<Id> accIdToOppMapForSingleDay = new Set<Id>();
+
+        for (Opportunity o : newOpps) {
+            if (o.AccountId != null) {
+                if (!accIdToOppMapForSingleT.containsKey(o.AccountId)) {
+                    accIdToOppMapForSingleT.put(o.AccountId, new List<Opportunity>());
+                }
+                accIdToOppMapForSingleT.get(o.AccountId).add(o); 
+            }
+        }
+
+        if (accIdToOppMapForSingleT.size() > 0) {
+            List<Opportunity> oppList = [SELECT Id, AccountId, CreatedDate FROM Opportunity WHERE AccountId IN :accIdToOppMapForSingleT.keySet() AND CreatedDate >= :Date.today() AND CreatedDate < :Date.today().addDays(1)];
+
+            for (Opportunity o : oppList) {
+                accIdToOppMapForSingleDay.add(o.AccountId);
+            }
+        }
+
+        for (Opportunity o : newOpps) {
+            if (accIdToOppMapForSingleT.containsKey(o.AccountId) && accIdToOppMapForSingleT.get(o.AccountId).size() > 1) {
+                o.addError('You can\'t create more than one opportunity in single transaction on same account!');
+            }
+
+            if (accIdToOppMapForSingleDay.contains(o.AccountId)) {
+                o.addError('You can\'t create more than one opportunity in single day on same account!');
             }
         }
     }

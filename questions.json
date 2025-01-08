@@ -284,5 +284,10 @@
         "questions": "Update the capacity of an event based on its distribution and set the status of the event distribution to waiting if the capacity is insufficient",
         "answers": "Check Event Distribution Trigger",
         "no": 57
+    },
+    {
+        "questions": "Prevent multiple opportunity creations for the same account within a day or a single transaction",
+        "answers":"Check Opportunity Trigger",
+        "no": 58
     }
 ]
