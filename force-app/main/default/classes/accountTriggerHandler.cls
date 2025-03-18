@@ -21,6 +21,7 @@ public class accountTriggerHandler {
         // changeOwnerToRelatedConsAndOpps(newAccs, oldAccs);
         // sendEmailToOwnerAboutModifiedContactsBetweenAccountLastUpdateAndCurrentUpdate(newAccs, oldAccs);
         // grantOrRemoveAccessToSecondaryOwner(newAccs, oldAccs);
+        // distributeBudgetToRelatedOpps(newAccs);
     }
 
     public static void beforeDelete(List<Account> newAccs) {
@@ -416,6 +417,46 @@ public class accountTriggerHandler {
                 }
 
                 update conList;
+            }
+        }
+    }
+
+    //problem #59
+    private static void distributeBudgetToRelatedOpps(List<Account> newAccs) {
+        Set<Id> accIds = new Set<Id>();
+
+        for (Account ac : newAccs) {
+            if (ac.Total_Budget__c != null) {
+                accIds.add(ac.Id);
+            }
+        }
+
+        if (!accIds.isEmpty()) {
+            List<Opportunity> oppList = [SELECT Id, AccountId, Account.Total_Budget__c, Amount FROM Opportunity WHERE AccountId IN :accIds];
+            Map<Id, Decimal> accMapToTotalBudget = new Map<Id, Decimal>();
+            Map<Id, Integer> accMapToOppCount = new Map<Id, Integer>();
+            List<Opportunity> opList = new List<Opportunity>();
+
+            for (Opportunity op : oppList) {
+                accMapToTotalBudget.put(op.AccountId, op.Account.Total_Budget__c);
+
+                if (!accMapToOppCount.containsKey(op.AccountId)) {
+                    accMapToOppCount.put(op.AccountId, 0);
+                }
+                accMapToOppCount.put(op.AccountId, accMapToOppCount.get(op.AccountId) + 1);
+            }
+
+            for (Opportunity op : oppList) {
+                if (accMapToTotalBudget.containsKey(op.AccountId) && accMapToOppCount.containsKey(op.AccountId)) {
+                    Decimal amount = accMapToTotalBudget.get(op.AccountId) / accMapToOppCount.get(op.AccountId);
+                    op.Amount = amount;
+
+                    opList.add(op);
+                }
+            }
+
+            if (!opList.isEmpty()) {
+                update opList;
             }
         }
     }

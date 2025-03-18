@@ -289,5 +289,15 @@
         "questions": "Prevent multiple opportunity creations for the same account within a day or a single transaction",
         "answers":"Check Opportunity Trigger",
         "no": 58
+    },
+    {
+        "questions": "Automatically distribute the total budget of an account among its related opps whenever the total budget field on account is updated",
+        "answers":"Check Account Trigger",
+        "no": 59
+    },
+    {
+        "questions": "Identify and update most recent subscriber for each account",
+        "answers":"Check Subscriber Trigger",
+        "no": 60
     }
 ]
