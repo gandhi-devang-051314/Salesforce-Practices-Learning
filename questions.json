@@ -299,5 +299,10 @@
         "questions": "Identify and update most recent subscriber for each account",
         "answers":"Check Subscriber Trigger",
         "no": 60
+    },
+    {
+        "questions": "Prevent the deletion of account that has contact marked as potential buyer",
+        "answers":"Check Account Trigger",
+        "no": 61
     }
 ]

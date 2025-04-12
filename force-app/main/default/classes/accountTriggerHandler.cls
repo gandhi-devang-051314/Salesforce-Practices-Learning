@@ -26,6 +26,7 @@ public class accountTriggerHandler {
 
     public static void beforeDelete(List<Account> newAccs) {
         // preventContactsToBeDeletedOfAccount(newAccs);
+        // preventDeletionOfAccountOfPotentialBuyer(newAccs);
     }
 
     //logic-functions
@@ -457,6 +458,21 @@ public class accountTriggerHandler {
 
             if (!opList.isEmpty()) {
                 update opList;
+            }
+        }
+    }
+
+    //problem #61
+    private static void preventDeletionOfAccountOfPotentialBuyer(List<Account> oldAccs) {
+        Map<Id, Account> oldAccMap = new Map<Id, Account>(oldAccs);
+
+        if (!oldAccMap.isEmpty()) {
+            List<Contact> conList = [SELECT Id FROM Contact WHERE AccountId IN :oldAccMap.keySet() AND Potential_buyer__c = true];
+            
+            if (!conList.isEmpty()) {
+                for (Account ac : oldAccs) {
+                    ac.addError('This account has contacts that are marked as potential buyers. You must change the contact\'s Potential Buyer status before you can delete it.');
+                }
             }
         }
     }
